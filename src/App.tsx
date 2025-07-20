@@ -10,6 +10,11 @@ import Igrejas from "./pages/Igrejas";
 import Grupos from "./pages/Grupos";
 import Membros from "./pages/Membros";
 import RelatorioMembros from "./pages/RelatorioMembros";
+import Cidades from "./pages/Cidades";
+import Estados from "./pages/Estados";
+import TiposUsuario from "./pages/TiposUsuario";
+import Situacoes from "./pages/Situacoes";
+import Perfil from "./pages/Perfil";
 import DashboardLayout from "./layouts/DashboardLayout";
 import NotFound from "./pages/NotFound";
 
@@ -33,6 +38,11 @@ const App = () => (
             <Route path="igrejas" element={<Igrejas />} />
             <Route path="grupos" element={<Grupos />} />
             <Route path="membros" element={<Membros />} />
+            <Route path="cidades" element={<Cidades />} />
+            <Route path="estados" element={<Estados />} />
+            <Route path="tipos-usuario" element={<TiposUsuario />} />
+            <Route path="situacoes" element={<Situacoes />} />
+            <Route path="perfil" element={<Perfil />} />
             <Route path="relatorios/membros-grupo" element={<RelatorioMembros />} />
           </Route>
           
