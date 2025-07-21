@@ -138,7 +138,7 @@ export default function Grupos() {
               Novo Grupo
             </Button>
           </DialogTrigger>
-          <DialogContent className="sm:max-w-[600px] max-h-[90vh] overflow-y-auto">
+          <DialogContent className="w-full max-w-[95vw] sm:max-w-[600px] max-h-[95vh] overflow-y-auto">
             <DialogHeader>
               <DialogTitle>Cadastrar Novo Grupo de Crescimento</DialogTitle>
               <DialogDescription>
@@ -326,51 +326,41 @@ export default function Grupos() {
           </CardDescription>
         </CardHeader>
         <CardContent>
-          <Table>
-            <TableHeader>
-              <TableRow>
-                <TableHead>Grupo</TableHead>
-                <TableHead>Igreja</TableHead>
-                <TableHead>Líder</TableHead>
-                <TableHead>Reunião</TableHead>
-                <TableHead>Membros</TableHead>
-                <TableHead>Situação</TableHead>
-                <TableHead className="text-right">Ações</TableHead>
-              </TableRow>
-            </TableHeader>
-            <TableBody>
-              {filteredGrupos.map((grupo) => (
-                <TableRow key={grupo.id}>
-                  <TableCell>
-                    <div>
+          {/* Mobile Cards - Hidden on desktop */}
+          <div className="md:hidden space-y-4">
+            {filteredGrupos.map((grupo) => (
+              <Card key={grupo.id} className="p-4">
+                <div className="space-y-3">
+                  <div className="flex justify-between items-start">
+                    <div className="flex-1">
                       <div className="font-medium">{grupo.nome}</div>
                       <div className="text-sm text-muted-foreground">{grupo.descricao}</div>
                     </div>
-                  </TableCell>
-                  <TableCell>{grupo.igreja}</TableCell>
-                  <TableCell className="flex items-center gap-1">
+                    <Badge variant={grupo.situacao === "Ativo" ? "default" : "secondary"}>
+                      {grupo.situacao}
+                    </Badge>
+                  </div>
+                  
+                  <div className="text-sm">{grupo.igreja}</div>
+                  
+                  <div className="flex items-center gap-1">
                     <User className="h-3 w-3 text-muted-foreground" />
-                    {grupo.lider}
-                  </TableCell>
-                  <TableCell>
+                    <span className="text-sm">{grupo.lider}</span>
+                  </div>
+                  
+                  <div>
                     <div className="flex items-center gap-1">
                       <Calendar className="h-3 w-3 text-muted-foreground" />
                       <span className="text-sm">{grupo.diaReuniao} {grupo.horarioReuniao}</span>
                     </div>
                     <div className="text-xs text-muted-foreground">{grupo.localReuniao}</div>
-                  </TableCell>
-                  <TableCell>
+                  </div>
+                  
+                  <div className="flex justify-between items-center pt-2 border-t">
                     <Badge variant="outline" className="bg-primary/10">
-                      {grupo.membros}
+                      {grupo.membros} membros
                     </Badge>
-                  </TableCell>
-                  <TableCell>
-                    <Badge variant={grupo.situacao === "Ativo" ? "default" : "secondary"}>
-                      {grupo.situacao}
-                    </Badge>
-                  </TableCell>
-                  <TableCell className="text-right">
-                    <div className="flex items-center justify-end gap-2">
+                    <div className="flex gap-2">
                       <Button variant="ghost" size="sm">
                         <Edit className="h-4 w-4" />
                       </Button>
@@ -378,11 +368,72 @@ export default function Grupos() {
                         <Trash2 className="h-4 w-4" />
                       </Button>
                     </div>
-                  </TableCell>
+                  </div>
+                </div>
+              </Card>
+            ))}
+          </div>
+
+          {/* Desktop Table - Hidden on mobile */}
+          <div className="hidden md:block">
+            <Table>
+              <TableHeader>
+                <TableRow>
+                  <TableHead>Grupo</TableHead>
+                  <TableHead>Igreja</TableHead>
+                  <TableHead>Líder</TableHead>
+                  <TableHead>Reunião</TableHead>
+                  <TableHead>Membros</TableHead>
+                  <TableHead>Situação</TableHead>
+                  <TableHead className="text-right">Ações</TableHead>
                 </TableRow>
-              ))}
-            </TableBody>
-          </Table>
+              </TableHeader>
+              <TableBody>
+                {filteredGrupos.map((grupo) => (
+                  <TableRow key={grupo.id}>
+                    <TableCell>
+                      <div>
+                        <div className="font-medium">{grupo.nome}</div>
+                        <div className="text-sm text-muted-foreground">{grupo.descricao}</div>
+                      </div>
+                    </TableCell>
+                    <TableCell>{grupo.igreja}</TableCell>
+                    <TableCell className="flex items-center gap-1">
+                      <User className="h-3 w-3 text-muted-foreground" />
+                      {grupo.lider}
+                    </TableCell>
+                    <TableCell>
+                      <div className="flex items-center gap-1">
+                        <Calendar className="h-3 w-3 text-muted-foreground" />
+                        <span className="text-sm">{grupo.diaReuniao} {grupo.horarioReuniao}</span>
+                      </div>
+                      <div className="text-xs text-muted-foreground">{grupo.localReuniao}</div>
+                    </TableCell>
+                    <TableCell>
+                      <Badge variant="outline" className="bg-primary/10">
+                        {grupo.membros}
+                      </Badge>
+                    </TableCell>
+                    <TableCell>
+                      <Badge variant={grupo.situacao === "Ativo" ? "default" : "secondary"}>
+                        {grupo.situacao}
+                      </Badge>
+                    </TableCell>
+                    <TableCell className="text-right">
+                      <div className="flex items-center justify-end gap-2">
+                        <Button variant="ghost" size="sm">
+                          <Edit className="h-4 w-4" />
+                        </Button>
+                        <Button variant="ghost" size="sm" className="text-destructive hover:text-destructive">
+                          <Trash2 className="h-4 w-4" />
+                        </Button>
+                      </div>
+                    </TableCell>
+                  </TableRow>
+                ))}
+              </TableBody>
+            </Table>
+          </div>
         </CardContent>
       </Card>
     </div>

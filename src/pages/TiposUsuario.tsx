@@ -210,49 +210,15 @@ export default function TiposUsuario() {
         </CardHeader>
         
         <CardContent>
-          <Table>
-            <TableHeader>
-              <TableRow>
-                <TableHead>Descrição</TableHead>
-                <TableHead>Admin Geral</TableHead>
-                <TableHead>Admin GCs</TableHead>
-                <TableHead>Líder GC</TableHead>
-                <TableHead>Status</TableHead>
-                <TableHead className="text-right">Ações</TableHead>
-              </TableRow>
-            </TableHeader>
-            <TableBody>
-              {filteredTipos.map((tipo) => (
-                <TableRow key={tipo.id}>
-                  <TableCell className="font-medium">{tipo.descricao}</TableCell>
-                  <TableCell>
-                    <span className={`px-2 py-1 rounded-full text-xs ${
-                      tipo.FL_ADM_GERAL 
-                        ? 'bg-green-100 text-green-800 dark:bg-green-900/20 dark:text-green-400' 
-                        : 'bg-gray-100 text-gray-800 dark:bg-gray-900/20 dark:text-gray-400'
-                    }`}>
-                      {tipo.FL_ADM_GERAL ? 'Sim' : 'Não'}
-                    </span>
-                  </TableCell>
-                  <TableCell>
-                    <span className={`px-2 py-1 rounded-full text-xs ${
-                      tipo.FL_ADM_GCS 
-                        ? 'bg-green-100 text-green-800 dark:bg-green-900/20 dark:text-green-400' 
-                        : 'bg-gray-100 text-gray-800 dark:bg-gray-900/20 dark:text-gray-400'
-                    }`}>
-                      {tipo.FL_ADM_GCS ? 'Sim' : 'Não'}
-                    </span>
-                  </TableCell>
-                  <TableCell>
-                    <span className={`px-2 py-1 rounded-full text-xs ${
-                      tipo.FL_LIDER_GC 
-                        ? 'bg-green-100 text-green-800 dark:bg-green-900/20 dark:text-green-400' 
-                        : 'bg-gray-100 text-gray-800 dark:bg-gray-900/20 dark:text-gray-400'
-                    }`}>
-                      {tipo.FL_LIDER_GC ? 'Sim' : 'Não'}
-                    </span>
-                  </TableCell>
-                  <TableCell>
+          {/* Mobile Cards - Hidden on desktop */}
+          <div className="md:hidden space-y-4">
+            {filteredTipos.map((tipo) => (
+              <Card key={tipo.id} className="p-4">
+                <div className="space-y-3">
+                  <div className="flex justify-between items-start">
+                    <div className="flex-1">
+                      <div className="font-medium">{tipo.descricao}</div>
+                    </div>
                     <span className={`px-2 py-1 rounded-full text-xs ${
                       tipo.ativo 
                         ? 'bg-green-100 text-green-800 dark:bg-green-900/20 dark:text-green-400' 
@@ -260,30 +226,116 @@ export default function TiposUsuario() {
                     }`}>
                       {tipo.ativo ? 'Ativo' : 'Inativo'}
                     </span>
-                  </TableCell>
-                  <TableCell className="text-right">
-                    <div className="flex justify-end space-x-2">
-                      <Button
-                        variant="outline"
-                        size="sm"
-                        onClick={() => handleEdit(tipo)}
-                      >
-                        <Edit className="h-4 w-4" />
-                      </Button>
-                      <Button
-                        variant="outline"
-                        size="sm"
-                        onClick={() => handleDelete(tipo.id)}
-                        className="text-destructive hover:text-destructive"
-                      >
-                        <Trash2 className="h-4 w-4" />
-                      </Button>
+                  </div>
+                  
+                  <div className="grid grid-cols-3 gap-2 text-xs">
+                    <div>
+                      <span className="text-muted-foreground">Admin Geral:</span>
+                      <div className={`mt-1 px-2 py-1 rounded text-center ${
+                        tipo.FL_ADM_GERAL ? 'bg-green-100 text-green-800' : 'bg-gray-100 text-gray-800'
+                      }`}>
+                        {tipo.FL_ADM_GERAL ? 'Sim' : 'Não'}
+                      </div>
                     </div>
-                  </TableCell>
+                    <div>
+                      <span className="text-muted-foreground">Admin GCs:</span>
+                      <div className={`mt-1 px-2 py-1 rounded text-center ${
+                        tipo.FL_ADM_GCS ? 'bg-green-100 text-green-800' : 'bg-gray-100 text-gray-800'
+                      }`}>
+                        {tipo.FL_ADM_GCS ? 'Sim' : 'Não'}
+                      </div>
+                    </div>
+                    <div>
+                      <span className="text-muted-foreground">Líder GC:</span>
+                      <div className={`mt-1 px-2 py-1 rounded text-center ${
+                        tipo.FL_LIDER_GC ? 'bg-green-100 text-green-800' : 'bg-gray-100 text-gray-800'
+                      }`}>
+                        {tipo.FL_LIDER_GC ? 'Sim' : 'Não'}
+                      </div>
+                    </div>
+                  </div>
+                  
+                  <div className="flex justify-end gap-2 pt-2 border-t">
+                    <Button variant="outline" size="sm" onClick={() => handleEdit(tipo)}>
+                      <Edit className="h-4 w-4" />
+                    </Button>
+                    <Button variant="outline" size="sm" onClick={() => handleDelete(tipo.id)} className="text-destructive hover:text-destructive">
+                      <Trash2 className="h-4 w-4" />
+                    </Button>
+                  </div>
+                </div>
+              </Card>
+            ))}
+          </div>
+
+          {/* Desktop Table - Hidden on mobile */}
+          <div className="hidden md:block">
+            <Table>
+              <TableHeader>
+                <TableRow>
+                  <TableHead>Descrição</TableHead>
+                  <TableHead>Admin Geral</TableHead>
+                  <TableHead>Admin GCs</TableHead>
+                  <TableHead>Líder GC</TableHead>
+                  <TableHead>Status</TableHead>
+                  <TableHead className="text-right">Ações</TableHead>
                 </TableRow>
-              ))}
-            </TableBody>
-          </Table>
+              </TableHeader>
+              <TableBody>
+                {filteredTipos.map((tipo) => (
+                  <TableRow key={tipo.id}>
+                    <TableCell className="font-medium">{tipo.descricao}</TableCell>
+                    <TableCell>
+                      <span className={`px-2 py-1 rounded-full text-xs ${
+                        tipo.FL_ADM_GERAL 
+                          ? 'bg-green-100 text-green-800 dark:bg-green-900/20 dark:text-green-400' 
+                          : 'bg-gray-100 text-gray-800 dark:bg-gray-900/20 dark:text-gray-400'
+                      }`}>
+                        {tipo.FL_ADM_GERAL ? 'Sim' : 'Não'}
+                      </span>
+                    </TableCell>
+                    <TableCell>
+                      <span className={`px-2 py-1 rounded-full text-xs ${
+                        tipo.FL_ADM_GCS 
+                          ? 'bg-green-100 text-green-800 dark:bg-green-900/20 dark:text-green-400' 
+                          : 'bg-gray-100 text-gray-800 dark:bg-gray-900/20 dark:text-gray-400'
+                      }`}>
+                        {tipo.FL_ADM_GCS ? 'Sim' : 'Não'}
+                      </span>
+                    </TableCell>
+                    <TableCell>
+                      <span className={`px-2 py-1 rounded-full text-xs ${
+                        tipo.FL_LIDER_GC 
+                          ? 'bg-green-100 text-green-800 dark:bg-green-900/20 dark:text-green-400' 
+                          : 'bg-gray-100 text-gray-800 dark:bg-gray-900/20 dark:text-gray-400'
+                      }`}>
+                        {tipo.FL_LIDER_GC ? 'Sim' : 'Não'}
+                      </span>
+                    </TableCell>
+                    <TableCell>
+                      <span className={`px-2 py-1 rounded-full text-xs ${
+                        tipo.ativo 
+                          ? 'bg-green-100 text-green-800 dark:bg-green-900/20 dark:text-green-400' 
+                          : 'bg-red-100 text-red-800 dark:bg-red-900/20 dark:text-red-400'
+                      }`}>
+                        {tipo.ativo ? 'Ativo' : 'Inativo'}
+                      </span>
+                    </TableCell>
+                    <TableCell className="text-right">
+                      <div className="flex justify-end space-x-2">
+                        <Button variant="outline" size="sm" onClick={() => handleEdit(tipo)}>
+                          <Edit className="h-4 w-4" />
+                        </Button>
+                        <Button variant="outline" size="sm" onClick={() => handleDelete(tipo.id)} className="text-destructive hover:text-destructive">
+                          <Trash2 className="h-4 w-4" />
+                        </Button>
+                      </div>
+                    </TableCell>
+                  </TableRow>
+                ))}
+              </TableBody>
+            </Table>
+          </div>
         </CardContent>
       </Card>
     </div>

@@ -119,7 +119,7 @@ export default function Igrejas() {
               Nova Igreja
             </Button>
           </DialogTrigger>
-          <DialogContent className="sm:max-w-[600px] max-h-[90vh] overflow-y-auto">
+          <DialogContent className="w-full max-w-[95vw] sm:max-w-[600px] max-h-[95vh] overflow-y-auto">
             <DialogHeader>
               <DialogTitle>Cadastrar Nova Igreja</DialogTitle>
               <DialogDescription>
@@ -291,64 +291,113 @@ export default function Igrejas() {
           </CardDescription>
         </CardHeader>
         <CardContent>
-          <Table>
-            <TableHeader>
-              <TableRow>
-                <TableHead>Nome</TableHead>
-                <TableHead>CNPJ</TableHead>
-                <TableHead>Localização</TableHead>
-                <TableHead>Contato</TableHead>
-                <TableHead>Situação</TableHead>
-                <TableHead className="text-right">Ações</TableHead>
-              </TableRow>
-            </TableHeader>
-            <TableBody>
-              {filteredIgrejas.map((igreja) => (
-                <TableRow key={igreja.id}>
-                  <TableCell>
+          {/* Mobile Cards - Hidden on desktop */}
+          <div className="md:hidden space-y-4">
+            {filteredIgrejas.map((igreja) => (
+              <Card key={igreja.id} className="p-4">
+                <div className="space-y-3">
+                  <div className="flex justify-between items-start">
                     <div>
                       <div className="font-medium">{igreja.nomeFantasia}</div>
                       <div className="text-sm text-muted-foreground">{igreja.razaoSocial}</div>
                     </div>
-                  </TableCell>
-                  <TableCell className="font-mono text-sm">{igreja.cnpj}</TableCell>
-                  <TableCell>
-                    <div className="flex items-center gap-1">
-                      <MapPin className="h-3 w-3 text-muted-foreground" />
-                      <span className="text-sm">{igreja.cidade}, {igreja.estado}</span>
-                    </div>
-                  </TableCell>
-                  <TableCell>
-                    <div className="space-y-1">
-                      <div className="flex items-center gap-1 text-sm">
-                        <Phone className="h-3 w-3 text-muted-foreground" />
-                        {igreja.telefone}
-                      </div>
-                      <div className="flex items-center gap-1 text-sm">
-                        <Mail className="h-3 w-3 text-muted-foreground" />
-                        {igreja.email}
-                      </div>
-                    </div>
-                  </TableCell>
-                  <TableCell>
                     <Badge variant={igreja.situacao === "Ativa" ? "default" : "secondary"}>
                       {igreja.situacao}
                     </Badge>
-                  </TableCell>
-                  <TableCell className="text-right">
-                    <div className="flex items-center justify-end gap-2">
-                      <Button variant="ghost" size="sm">
-                        <Edit className="h-4 w-4" />
-                      </Button>
-                      <Button variant="ghost" size="sm" className="text-destructive hover:text-destructive">
-                        <Trash2 className="h-4 w-4" />
-                      </Button>
+                  </div>
+                  
+                  <div className="text-sm font-mono">{igreja.cnpj}</div>
+                  
+                  <div className="flex items-center gap-1">
+                    <MapPin className="h-3 w-3 text-muted-foreground" />
+                    <span className="text-sm">{igreja.cidade}, {igreja.estado}</span>
+                  </div>
+                  
+                  <div className="space-y-1">
+                    <div className="flex items-center gap-1 text-sm">
+                      <Phone className="h-3 w-3 text-muted-foreground" />
+                      {igreja.telefone}
                     </div>
-                  </TableCell>
+                    <div className="flex items-center gap-1 text-sm">
+                      <Mail className="h-3 w-3 text-muted-foreground" />
+                      {igreja.email}
+                    </div>
+                  </div>
+                  
+                  <div className="flex justify-end gap-2 pt-2 border-t">
+                    <Button variant="ghost" size="sm">
+                      <Edit className="h-4 w-4" />
+                    </Button>
+                    <Button variant="ghost" size="sm" className="text-destructive hover:text-destructive">
+                      <Trash2 className="h-4 w-4" />
+                    </Button>
+                  </div>
+                </div>
+              </Card>
+            ))}
+          </div>
+
+          {/* Desktop Table - Hidden on mobile */}
+          <div className="hidden md:block">
+            <Table>
+              <TableHeader>
+                <TableRow>
+                  <TableHead>Nome</TableHead>
+                  <TableHead>CNPJ</TableHead>
+                  <TableHead>Localização</TableHead>
+                  <TableHead>Contato</TableHead>
+                  <TableHead>Situação</TableHead>
+                  <TableHead className="text-right">Ações</TableHead>
                 </TableRow>
-              ))}
-            </TableBody>
-          </Table>
+              </TableHeader>
+              <TableBody>
+                {filteredIgrejas.map((igreja) => (
+                  <TableRow key={igreja.id}>
+                    <TableCell>
+                      <div>
+                        <div className="font-medium">{igreja.nomeFantasia}</div>
+                        <div className="text-sm text-muted-foreground">{igreja.razaoSocial}</div>
+                      </div>
+                    </TableCell>
+                    <TableCell className="font-mono text-sm">{igreja.cnpj}</TableCell>
+                    <TableCell>
+                      <div className="flex items-center gap-1">
+                        <MapPin className="h-3 w-3 text-muted-foreground" />
+                        <span className="text-sm">{igreja.cidade}, {igreja.estado}</span>
+                      </div>
+                    </TableCell>
+                    <TableCell>
+                      <div className="space-y-1">
+                        <div className="flex items-center gap-1 text-sm">
+                          <Phone className="h-3 w-3 text-muted-foreground" />
+                          {igreja.telefone}
+                        </div>
+                        <div className="flex items-center gap-1 text-sm">
+                          <Mail className="h-3 w-3 text-muted-foreground" />
+                          {igreja.email}
+                        </div>
+                      </div>
+                    </TableCell>
+                    <TableCell>
+                      <Badge variant={igreja.situacao === "Ativa" ? "default" : "secondary"}>
+                        {igreja.situacao}
+                      </Badge>
+                    </TableCell>
+                    <TableCell className="text-right">
+                      <div className="flex items-center justify-end gap-2">
+                        <Button variant="ghost" size="sm">
+                          <Edit className="h-4 w-4" />
+                        </Button>
+                        <Button variant="ghost" size="sm" className="text-destructive hover:text-destructive">
+                          <Trash2 className="h-4 w-4" />
+                        </Button>
+                      </div>
+                    </TableCell>
+                  </TableRow>
+                ))}
+              </TableBody>
+            </Table>
+          </div>
         </CardContent>
       </Card>
     </div>

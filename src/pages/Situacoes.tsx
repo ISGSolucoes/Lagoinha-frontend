@@ -129,19 +129,15 @@ export default function Situacoes() {
         </CardHeader>
         
         <CardContent>
-          <Table>
-            <TableHeader>
-              <TableRow>
-                <TableHead>Descrição</TableHead>
-                <TableHead>Status</TableHead>
-                <TableHead className="text-right">Ações</TableHead>
-              </TableRow>
-            </TableHeader>
-            <TableBody>
-              {filteredSituacoes.map((situacao) => (
-                <TableRow key={situacao.id}>
-                  <TableCell className="font-medium">{situacao.descricao}</TableCell>
-                  <TableCell>
+          {/* Mobile Cards - Hidden on desktop */}
+          <div className="md:hidden space-y-4">
+            {filteredSituacoes.map((situacao) => (
+              <Card key={situacao.id} className="p-4">
+                <div className="space-y-3">
+                  <div className="flex justify-between items-start">
+                    <div className="flex-1">
+                      <div className="font-medium">{situacao.descricao}</div>
+                    </div>
                     <span className={`px-2 py-1 rounded-full text-xs ${
                       situacao.ativo 
                         ? 'bg-green-100 text-green-800 dark:bg-green-900/20 dark:text-green-400' 
@@ -149,30 +145,77 @@ export default function Situacoes() {
                     }`}>
                       {situacao.ativo ? 'Ativo' : 'Inativo'}
                     </span>
-                  </TableCell>
-                  <TableCell className="text-right">
-                    <div className="flex justify-end space-x-2">
-                      <Button
-                        variant="outline"
-                        size="sm"
-                        onClick={() => handleEdit(situacao)}
-                      >
-                        <Edit className="h-4 w-4" />
-                      </Button>
-                      <Button
-                        variant="outline"
-                        size="sm"
-                        onClick={() => handleDelete(situacao.id)}
-                        className="text-destructive hover:text-destructive"
-                      >
-                        <Trash2 className="h-4 w-4" />
-                      </Button>
-                    </div>
-                  </TableCell>
+                  </div>
+                  
+                  <div className="flex justify-end gap-2 pt-2 border-t">
+                    <Button
+                      variant="outline"
+                      size="sm"
+                      onClick={() => handleEdit(situacao)}
+                    >
+                      <Edit className="h-4 w-4" />
+                    </Button>
+                    <Button
+                      variant="outline"
+                      size="sm"
+                      onClick={() => handleDelete(situacao.id)}
+                      className="text-destructive hover:text-destructive"
+                    >
+                      <Trash2 className="h-4 w-4" />
+                    </Button>
+                  </div>
+                </div>
+              </Card>
+            ))}
+          </div>
+
+          {/* Desktop Table - Hidden on mobile */}
+          <div className="hidden md:block">
+            <Table>
+              <TableHeader>
+                <TableRow>
+                  <TableHead>Descrição</TableHead>
+                  <TableHead>Status</TableHead>
+                  <TableHead className="text-right">Ações</TableHead>
                 </TableRow>
-              ))}
-            </TableBody>
-          </Table>
+              </TableHeader>
+              <TableBody>
+                {filteredSituacoes.map((situacao) => (
+                  <TableRow key={situacao.id}>
+                    <TableCell className="font-medium">{situacao.descricao}</TableCell>
+                    <TableCell>
+                      <span className={`px-2 py-1 rounded-full text-xs ${
+                        situacao.ativo 
+                          ? 'bg-green-100 text-green-800 dark:bg-green-900/20 dark:text-green-400' 
+                          : 'bg-red-100 text-red-800 dark:bg-red-900/20 dark:text-red-400'
+                      }`}>
+                        {situacao.ativo ? 'Ativo' : 'Inativo'}
+                      </span>
+                    </TableCell>
+                    <TableCell className="text-right">
+                      <div className="flex justify-end space-x-2">
+                        <Button
+                          variant="outline"
+                          size="sm"
+                          onClick={() => handleEdit(situacao)}
+                        >
+                          <Edit className="h-4 w-4" />
+                        </Button>
+                        <Button
+                          variant="outline"
+                          size="sm"
+                          onClick={() => handleDelete(situacao.id)}
+                          className="text-destructive hover:text-destructive"
+                        >
+                          <Trash2 className="h-4 w-4" />
+                        </Button>
+                      </div>
+                    </TableCell>
+                  </TableRow>
+                ))}
+              </TableBody>
+            </Table>
+          </div>
         </CardContent>
       </Card>
     </div>

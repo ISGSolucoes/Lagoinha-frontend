@@ -149,7 +149,7 @@ export default function Membros() {
               Novo Membro
             </Button>
           </DialogTrigger>
-          <DialogContent className="sm:max-w-[700px] max-h-[90vh] overflow-y-auto">
+          <DialogContent className="w-full max-w-[95vw] sm:max-w-[700px] max-h-[95vh] overflow-y-auto">
             <DialogHeader>
               <DialogTitle>Cadastrar Novo Membro</DialogTitle>
               <DialogDescription>
@@ -395,57 +395,18 @@ export default function Membros() {
           </CardDescription>
         </CardHeader>
         <CardContent>
-          <Table>
-            <TableHeader>
-              <TableRow>
-                <TableHead>Membro</TableHead>
-                <TableHead>Contato</TableHead>
-                <TableHead>Idade</TableHead>
-                <TableHead>Igreja/Grupo</TableHead>
-                <TableHead>Localização</TableHead>
-                <TableHead>Situação</TableHead>
-                <TableHead className="text-right">Ações</TableHead>
-              </TableRow>
-            </TableHeader>
-            <TableBody>
-              {filteredMembros.map((membro) => (
-                <TableRow key={membro.id}>
-                  <TableCell>
-                    <div>
+          {/* Mobile Cards - Hidden on desktop */}
+          <div className="md:hidden space-y-4">
+            {filteredMembros.map((membro) => (
+              <Card key={membro.id} className="p-4">
+                <div className="space-y-3">
+                  <div className="flex justify-between items-start">
+                    <div className="flex-1">
                       <div className="font-medium">{membro.nome}</div>
-                    </div>
-                  </TableCell>
-                  <TableCell>
-                    <div className="space-y-1">
-                      <div className="flex items-center gap-1 text-sm">
-                        <Mail className="h-3 w-3 text-muted-foreground" />
-                        {membro.email}
-                      </div>
-                      <div className="flex items-center gap-1 text-sm">
-                        <Phone className="h-3 w-3 text-muted-foreground" />
-                        {membro.telefone}
+                      <div className="text-sm text-muted-foreground">
+                        {membro.igreja} • {membro.grupoGrowth}
                       </div>
                     </div>
-                  </TableCell>
-                  <TableCell>
-                    <div className="flex items-center gap-1">
-                      <Calendar className="h-3 w-3 text-muted-foreground" />
-                      <span>{calculateAge(membro.dataNascimento)} anos</span>
-                    </div>
-                  </TableCell>
-                  <TableCell>
-                    <div>
-                      <div className="font-medium text-sm">{membro.igreja}</div>
-                      <div className="text-xs text-muted-foreground">{membro.grupoGrowth}</div>
-                    </div>
-                  </TableCell>
-                  <TableCell>
-                    <div className="flex items-center gap-1">
-                      <MapPin className="h-3 w-3 text-muted-foreground" />
-                      <span className="text-sm">{membro.cidade}, {membro.estado}</span>
-                    </div>
-                  </TableCell>
-                  <TableCell>
                     <Badge 
                       variant={
                         membro.situacao === "Ativo" ? "default" : 
@@ -454,21 +415,120 @@ export default function Membros() {
                     >
                       {membro.situacao}
                     </Badge>
-                  </TableCell>
-                  <TableCell className="text-right">
-                    <div className="flex items-center justify-end gap-2">
-                      <Button variant="ghost" size="sm">
-                        <Edit className="h-4 w-4" />
-                      </Button>
-                      <Button variant="ghost" size="sm" className="text-destructive hover:text-destructive">
-                        <Trash2 className="h-4 w-4" />
-                      </Button>
+                  </div>
+                  
+                  <div className="space-y-2">
+                    <div className="flex items-center gap-1 text-sm">
+                      <Mail className="h-3 w-3 text-muted-foreground" />
+                      {membro.email}
                     </div>
-                  </TableCell>
+                    <div className="flex items-center gap-1 text-sm">
+                      <Phone className="h-3 w-3 text-muted-foreground" />
+                      {membro.telefone}
+                    </div>
+                  </div>
+                  
+                  <div className="flex justify-between items-center text-sm">
+                    <div className="flex items-center gap-1">
+                      <Calendar className="h-3 w-3 text-muted-foreground" />
+                      <span>{calculateAge(membro.dataNascimento)} anos</span>
+                    </div>
+                    <div className="flex items-center gap-1">
+                      <MapPin className="h-3 w-3 text-muted-foreground" />
+                      <span>{membro.cidade}, {membro.estado}</span>
+                    </div>
+                  </div>
+                  
+                  <div className="flex justify-end gap-2 pt-2 border-t">
+                    <Button variant="ghost" size="sm">
+                      <Edit className="h-4 w-4" />
+                    </Button>
+                    <Button variant="ghost" size="sm" className="text-destructive hover:text-destructive">
+                      <Trash2 className="h-4 w-4" />
+                    </Button>
+                  </div>
+                </div>
+              </Card>
+            ))}
+          </div>
+
+          {/* Desktop Table - Hidden on mobile */}
+          <div className="hidden md:block">
+            <Table>
+              <TableHeader>
+                <TableRow>
+                  <TableHead>Membro</TableHead>
+                  <TableHead>Contato</TableHead>
+                  <TableHead>Idade</TableHead>
+                  <TableHead>Igreja/Grupo</TableHead>
+                  <TableHead>Localização</TableHead>
+                  <TableHead>Situação</TableHead>
+                  <TableHead className="text-right">Ações</TableHead>
                 </TableRow>
-              ))}
-            </TableBody>
-          </Table>
+              </TableHeader>
+              <TableBody>
+                {filteredMembros.map((membro) => (
+                  <TableRow key={membro.id}>
+                    <TableCell>
+                      <div>
+                        <div className="font-medium">{membro.nome}</div>
+                      </div>
+                    </TableCell>
+                    <TableCell>
+                      <div className="space-y-1">
+                        <div className="flex items-center gap-1 text-sm">
+                          <Mail className="h-3 w-3 text-muted-foreground" />
+                          {membro.email}
+                        </div>
+                        <div className="flex items-center gap-1 text-sm">
+                          <Phone className="h-3 w-3 text-muted-foreground" />
+                          {membro.telefone}
+                        </div>
+                      </div>
+                    </TableCell>
+                    <TableCell>
+                      <div className="flex items-center gap-1">
+                        <Calendar className="h-3 w-3 text-muted-foreground" />
+                        <span>{calculateAge(membro.dataNascimento)} anos</span>
+                      </div>
+                    </TableCell>
+                    <TableCell>
+                      <div>
+                        <div className="font-medium text-sm">{membro.igreja}</div>
+                        <div className="text-xs text-muted-foreground">{membro.grupoGrowth}</div>
+                      </div>
+                    </TableCell>
+                    <TableCell>
+                      <div className="flex items-center gap-1">
+                        <MapPin className="h-3 w-3 text-muted-foreground" />
+                        <span className="text-sm">{membro.cidade}, {membro.estado}</span>
+                      </div>
+                    </TableCell>
+                    <TableCell>
+                      <Badge 
+                        variant={
+                          membro.situacao === "Ativo" ? "default" : 
+                          membro.situacao === "Visitante" ? "secondary" : "outline"
+                        }
+                      >
+                        {membro.situacao}
+                      </Badge>
+                    </TableCell>
+                    <TableCell className="text-right">
+                      <div className="flex items-center justify-end gap-2">
+                        <Button variant="ghost" size="sm">
+                          <Edit className="h-4 w-4" />
+                        </Button>
+                        <Button variant="ghost" size="sm" className="text-destructive hover:text-destructive">
+                          <Trash2 className="h-4 w-4" />
+                        </Button>
+                      </div>
+                    </TableCell>
+                  </TableRow>
+                ))}
+              </TableBody>
+            </Table>
+          </div>
         </CardContent>
       </Card>
     </div>
