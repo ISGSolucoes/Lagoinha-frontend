@@ -90,27 +90,138 @@ export default function Membros() {
     { value: "visitante", label: "Visitante" }
   ]
 
-  const handleSubmit = (e: React.FormEvent) => {
+  // Função para enviar mensagem de boas-vindas via WhatsApp
+  const sendWhatsAppWelcome = async (nome: string, telefone: string) => {
+    try {
+      // Formatando o telefone para o padrão internacional (remove caracteres especiais)
+      const phoneNumber = telefone.replace(/[^\d]/g, '')
+      
+      // Mensagem de boas-vindas personalizada
+      const message = `Olá ${nome}! 🙏\n\nSeja bem-vindo(a) à nossa igreja! ✨\n\nSeu cadastro foi realizado com sucesso e agora você faz parte da nossa comunidade.\n\nEm breve entraremos em contato com mais informações sobre nossos grupos de crescimento e atividades.\n\nQue Deus abençoe sua jornada conosco! 🕊️`
+      
+      /* INTEGRAÇÃO COM APIs DE WHATSAPP - ESCOLHA UMA DAS OPÇÕES ABAIXO:
+      
+      // OPÇÃO 1: WhatsApp Business API (oficial)
+      const response = await fetch('https://graph.facebook.com/v17.0/YOUR_PHONE_NUMBER_ID/messages', {
+        method: 'POST',
+        headers: {
+          'Authorization': `Bearer YOUR_ACCESS_TOKEN`,
+          'Content-Type': 'application/json'
+        },
+        body: JSON.stringify({
+          messaging_product: 'whatsapp',
+          to: `55${phoneNumber}`,
+          type: 'text',
+          text: { body: message }
+        })
+      })
+      
+      // OPÇÃO 2: Evolution API (Open Source)
+      const response = await fetch('YOUR_EVOLUTION_API_URL/message/sendText', {
+        method: 'POST',
+        headers: {
+          'apikey': 'YOUR_API_KEY',
+          'Content-Type': 'application/json'
+        },
+        body: JSON.stringify({
+          number: `55${phoneNumber}`,
+          text: message
+        })
+      })
+      
+      // OPÇÃO 3: Z-API (Brasileiro)
+      const response = await fetch('https://api.z-api.io/instances/YOUR_INSTANCE/token/YOUR_TOKEN/send-text', {
+        method: 'POST',
+        headers: {
+          'Content-Type': 'application/json'
+        },
+        body: JSON.stringify({
+          phone: `55${phoneNumber}`,
+          message: message
+        })
+      })
+      
+      // OPÇÃO 4: Baileys (via sua própria API)
+      const response = await fetch('/api/whatsapp/send-message', {
+        method: 'POST',
+        headers: {
+          'Content-Type': 'application/json'
+        },
+        body: JSON.stringify({
+          to: phoneNumber,
+          message: message
+        })
+      })
+      */
+      
+      // Para demonstração, vamos simular o envio
+      console.log('WhatsApp Message to send:', {
+        to: phoneNumber,
+        message: message
+      })
+      
+      // Simular delay de envio
+      await new Promise(resolve => setTimeout(resolve, 1000))
+      
+      toast({
+        title: "Mensagem WhatsApp enviada!",
+        description: `Mensagem de boas-vindas enviada para ${telefone}`,
+      })
+      
+    } catch (error) {
+      console.error('Erro ao enviar mensagem WhatsApp:', error)
+      toast({
+        title: "Erro no WhatsApp",
+        description: "Não foi possível enviar a mensagem de boas-vindas",
+        variant: "destructive"
+      })
+    }
+  }
+
+  const handleSubmit = async (e: React.FormEvent) => {
     e.preventDefault()
-    toast({
-      title: "Membro cadastrado com sucesso!",
-      description: "O membro foi adicionado ao sistema.",
-    })
-    setIsDialogOpen(false)
-    // Reset form
-    setFormData({
-      nome: "",
-      email: "",
-      telefone: "",
-      dataNascimento: "",
-      endereco: "",
-      cidade: "",
-      estado: "",
-      cep: "",
-      igreja: "",
-      grupoGrowth: "",
-      situacao: ""
-    })
+    
+    try {
+      // Aqui você faria a chamada para sua API de cadastro
+      // const response = await fetch('/api/membros', {
+      //   method: 'POST',
+      //   headers: { 'Content-Type': 'application/json' },
+      //   body: JSON.stringify(formData)
+      // })
+      
+      toast({
+        title: "Membro cadastrado com sucesso!",
+        description: "O membro foi adicionado ao sistema.",
+      })
+      
+      // Enviar mensagem de boas-vindas via WhatsApp
+      if (formData.telefone && formData.nome) {
+        await sendWhatsAppWelcome(formData.nome, formData.telefone)
+      }
+      
+      setIsDialogOpen(false)
+      // Reset form
+      setFormData({
+        nome: "",
+        email: "",
+        telefone: "",
+        dataNascimento: "",
+        endereco: "",
+        cidade: "",
+        estado: "",
+        cep: "",
+        igreja: "",
+        grupoGrowth: "",
+        situacao: ""
+      })
+    } catch (error) {
+      console.error('Erro ao cadastrar membro:', error)
+      toast({
+        title: "Erro no cadastro",
+        description: "Não foi possível cadastrar o membro",
+        variant: "destructive"
+      })
+    }
   }
 
   const updateFormData = (field: string, value: string) => {
