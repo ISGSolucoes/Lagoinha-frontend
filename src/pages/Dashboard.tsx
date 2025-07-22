@@ -1,5 +1,5 @@
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from "@/components/ui/card"
-import { Church, Users, UserPlus, BarChart3, TrendingUp, Calendar } from "lucide-react"
+import { Church, Users, UserPlus, BarChart3, TrendingUp, Calendar, CheckCircle, UserCheck } from "lucide-react"
 
 export default function Dashboard() {
   const stats = [
@@ -40,6 +40,17 @@ export default function Dashboard() {
     { action: "Relatório gerado", details: "Membros por GC - Janeiro", time: "2 dias atrás" }
   ]
 
+  // Mock data para frequência (em um cenário real, viria do backend)
+  const attendanceStats = {
+    totalPresences: 324,
+    averageAttendance: 78.5,
+    topAttendees: [
+      { name: "Maria Silva", group: "GC Adultos", attendance: 95 },
+      { name: "João Santos", group: "GC Jovens", attendance: 90 },
+      { name: "Ana Costa", group: "GC Mulheres", attendance: 88 }
+    ]
+  }
+
   return (
     <div className="space-y-6 animate-fade-in">
       <div className="space-y-2">
@@ -66,6 +77,65 @@ export default function Dashboard() {
             </CardContent>
           </Card>
         ))}
+      </div>
+
+      {/* Attendance Stats Section */}
+      <div className="grid grid-cols-1 lg:grid-cols-3 gap-6">
+        {/* Total Presenças */}
+        <Card className="shadow-soft border-border/50">
+          <CardHeader className="flex flex-row items-center justify-between space-y-0 pb-2">
+            <CardTitle className="text-sm font-medium text-muted-foreground">
+              Presenças do Mês
+            </CardTitle>
+            <CheckCircle className="h-4 w-4 text-primary" />
+          </CardHeader>
+          <CardContent>
+            <div className="text-2xl font-bold text-foreground">{attendanceStats.totalPresences}</div>
+            <p className="text-xs text-muted-foreground">Total de presenças em janeiro</p>
+            <p className="text-xs text-primary mt-1">↗️ +12% vs mês anterior</p>
+          </CardContent>
+        </Card>
+
+        {/* Taxa de Frequência */}
+        <Card className="shadow-soft border-border/50">
+          <CardHeader className="flex flex-row items-center justify-between space-y-0 pb-2">
+            <CardTitle className="text-sm font-medium text-muted-foreground">
+              Frequência Média
+            </CardTitle>
+            <BarChart3 className="h-4 w-4 text-primary" />
+          </CardHeader>
+          <CardContent>
+            <div className="text-2xl font-bold text-foreground">{attendanceStats.averageAttendance}%</div>
+            <p className="text-xs text-muted-foreground">Taxa média de presença</p>
+            <p className="text-xs text-primary mt-1">🎯 Meta: 80%</p>
+          </CardContent>
+        </Card>
+
+        {/* Membros Mais Frequentes */}
+        <Card className="shadow-soft border-border/50">
+          <CardHeader>
+            <CardTitle className="flex items-center gap-2">
+              <UserCheck className="h-5 w-5 text-primary" />
+              Top Frequência
+            </CardTitle>
+            <CardDescription>
+              Membros mais assíduos
+            </CardDescription>
+          </CardHeader>
+          <CardContent>
+            <div className="space-y-3">
+              {attendanceStats.topAttendees.map((member, index) => (
+                <div key={index} className="flex items-center justify-between p-2 rounded-lg bg-muted/30">
+                  <div>
+                    <p className="font-medium text-sm">{member.name}</p>
+                    <p className="text-xs text-muted-foreground">{member.group}</p>
+                  </div>
+                  <div className="text-sm font-bold text-primary">{member.attendance}%</div>
+                </div>
+              ))}
+            </div>
+          </CardContent>
+        </Card>
       </div>
 
       {/* Main Content Grid */}
