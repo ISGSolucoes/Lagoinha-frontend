@@ -19,12 +19,16 @@ export default function Membros() {
     telefone: "",
     dataNascimento: "",
     endereco: "",
+    bairro: "",
     cidade: "",
     estado: "",
     cep: "",
     igreja: "",
     grupoGrowth: "",
-    situacao: ""
+    situacao: "",
+    batizadoAguas: false,
+    cafeNovosMembros: false,
+    visitante: false
   })
 
   const { toast } = useToast()
@@ -207,12 +211,16 @@ export default function Membros() {
         telefone: "",
         dataNascimento: "",
         endereco: "",
+        bairro: "",
         cidade: "",
         estado: "",
         cep: "",
         igreja: "",
         grupoGrowth: "",
-        situacao: ""
+        situacao: "",
+        batizadoAguas: false,
+        cafeNovosMembros: false,
+        visitante: false
       })
     } catch (error) {
       console.error('Erro ao cadastrar membro:', error)
@@ -224,7 +232,7 @@ export default function Membros() {
     }
   }
 
-  const updateFormData = (field: string, value: string) => {
+  const updateFormData = (field: string, value: string | boolean) => {
     setFormData(prev => ({ ...prev, [field]: value }))
   }
 
@@ -323,48 +331,56 @@ export default function Membros() {
                 <div className="space-y-4">
                   <h3 className="text-lg font-medium">Endereço</h3>
                   
-                  <div className="grid grid-cols-1 md:grid-cols-3 gap-4">
-                    <div className="md:col-span-2 space-y-2">
-                      <Label htmlFor="endereco">Endereço</Label>
-                      <Input
-                        id="endereco"
-                        value={formData.endereco}
-                        onChange={(e) => updateFormData("endereco", e.target.value)}
-                        placeholder="Rua, número, bairro"
-                      />
-                    </div>
-                    <div className="space-y-2">
-                      <Label htmlFor="cep">CEP</Label>
-                      <Input
-                        id="cep"
-                        value={formData.cep}
-                        onChange={(e) => updateFormData("cep", e.target.value)}
-                        placeholder="00000-000"
-                      />
-                    </div>
-                  </div>
+                   <div className="space-y-2">
+                     <Label htmlFor="endereco">Endereço</Label>
+                     <Input
+                       id="endereco"
+                       value={formData.endereco}
+                       onChange={(e) => updateFormData("endereco", e.target.value)}
+                       placeholder="Rua e número"
+                     />
+                   </div>
 
-                  <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
-                    <div className="space-y-2">
-                      <Label htmlFor="cidade">Cidade</Label>
-                      <Input
-                        id="cidade"
-                        value={formData.cidade}
-                        onChange={(e) => updateFormData("cidade", e.target.value)}
-                        placeholder="Cidade"
-                      />
-                    </div>
-                    <div className="space-y-2">
-                      <Label htmlFor="estado">Estado</Label>
-                      <Input
-                        id="estado"
-                        value={formData.estado}
-                        onChange={(e) => updateFormData("estado", e.target.value)}
-                        placeholder="UF"
-                        maxLength={2}
-                      />
-                    </div>
-                  </div>
+                   <div className="grid grid-cols-1 md:grid-cols-3 gap-4">
+                     <div className="space-y-2">
+                       <Label htmlFor="bairro">Bairro</Label>
+                       <Input
+                         id="bairro"
+                         value={formData.bairro}
+                         onChange={(e) => updateFormData("bairro", e.target.value)}
+                         placeholder="Bairro"
+                       />
+                     </div>
+                     <div className="space-y-2">
+                       <Label htmlFor="cidade">Cidade</Label>
+                       <Input
+                         id="cidade"
+                         value={formData.cidade}
+                         onChange={(e) => updateFormData("cidade", e.target.value)}
+                         placeholder="Cidade"
+                       />
+                     </div>
+                     <div className="space-y-2">
+                       <Label htmlFor="estado">Estado</Label>
+                       <Input
+                         id="estado"
+                         value={formData.estado}
+                         onChange={(e) => updateFormData("estado", e.target.value)}
+                         placeholder="UF"
+                         maxLength={2}
+                       />
+                     </div>
+                   </div>
+
+                   <div className="space-y-2">
+                     <Label htmlFor="cep">CEP</Label>
+                     <Input
+                       id="cep"
+                       value={formData.cep}
+                       onChange={(e) => updateFormData("cep", e.target.value)}
+                       placeholder="00000-000"
+                     />
+                   </div>
                 </div>
 
                 {/* Church Information */}
@@ -404,23 +420,63 @@ export default function Membros() {
                     </div>
                   </div>
 
-                  <div className="space-y-2">
-                    <Label htmlFor="situacao">Situação</Label>
-                    <Select onValueChange={(value) => updateFormData("situacao", value)} required>
-                      <SelectTrigger>
-                        <SelectValue placeholder="Selecione a situação" />
-                      </SelectTrigger>
-                      <SelectContent>
-                        {situacoes.map((situacao) => (
-                          <SelectItem key={situacao.value} value={situacao.value}>
-                            {situacao.label}
-                          </SelectItem>
-                        ))}
-                      </SelectContent>
-                    </Select>
-                  </div>
-                </div>
-              </div>
+                   <div className="space-y-2">
+                     <Label htmlFor="situacao">Situação</Label>
+                     <Select onValueChange={(value) => updateFormData("situacao", value)} required>
+                       <SelectTrigger>
+                         <SelectValue placeholder="Selecione a situação" />
+                       </SelectTrigger>
+                       <SelectContent>
+                         {situacoes.map((situacao) => (
+                           <SelectItem key={situacao.value} value={situacao.value}>
+                             {situacao.label}
+                           </SelectItem>
+                         ))}
+                       </SelectContent>
+                     </Select>
+                   </div>
+                 </div>
+
+                 {/* Status Information */}
+                 <div className="space-y-4">
+                   <h3 className="text-lg font-medium">Status do Membro</h3>
+                   
+                   <div className="space-y-4">
+                     <div className="flex items-center space-x-2">
+                       <input
+                         type="checkbox"
+                         id="batizadoAguas"
+                         checked={formData.batizadoAguas}
+                         onChange={(e) => updateFormData("batizadoAguas", e.target.checked)}
+                         className="rounded border-border focus:ring-primary"
+                       />
+                       <Label htmlFor="batizadoAguas">Já foi batizado nas águas</Label>
+                     </div>
+
+                     <div className="flex items-center space-x-2">
+                       <input
+                         type="checkbox"
+                         id="cafeNovosMembros"
+                         checked={formData.cafeNovosMembros}
+                         onChange={(e) => updateFormData("cafeNovosMembros", e.target.checked)}
+                         className="rounded border-border focus:ring-primary"
+                       />
+                       <Label htmlFor="cafeNovosMembros">Já participou do café para novos membros</Label>
+                     </div>
+
+                     <div className="flex items-center space-x-2">
+                       <input
+                         type="checkbox"
+                         id="visitante"
+                         checked={formData.visitante}
+                         onChange={(e) => updateFormData("visitante", e.target.checked)}
+                         className="rounded border-border focus:ring-primary"
+                       />
+                       <Label htmlFor="visitante">É visitante?</Label>
+                     </div>
+                   </div>
+                 </div>
+               </div>
               <DialogFooter>
                 <Button type="submit" className="bg-gradient-warm hover:opacity-90 transition-opacity">
                   Cadastrar Membro

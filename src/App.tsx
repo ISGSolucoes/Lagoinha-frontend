@@ -10,6 +10,8 @@ import Igrejas from "./pages/Igrejas";
 import Grupos from "./pages/Grupos";
 import Membros from "./pages/Membros";
 import RelatorioMembros from "./pages/RelatorioMembros";
+import ListaPresenca from "./pages/ListaPresenca";
+import RelatorioPresenca from "./pages/RelatorioPresenca";
 import Cidades from "./pages/Cidades";
 import Estados from "./pages/Estados";
 import TiposUsuario from "./pages/TiposUsuario";
@@ -43,6 +45,8 @@ const App = () => (
             <Route path="tipos-usuario" element={<TiposUsuario />} />
             <Route path="situacoes" element={<Situacoes />} />
             <Route path="perfil" element={<Perfil />} />
+            <Route path="lista-presenca" element={<ListaPresenca />} />
+            <Route path="relatorio-presenca" element={<RelatorioPresenca />} />
             <Route path="relatorios/membros-grupo" element={<RelatorioMembros />} />
           </Route>
           

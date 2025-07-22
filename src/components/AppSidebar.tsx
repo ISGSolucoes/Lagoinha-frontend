@@ -10,7 +10,9 @@ import {
   User,
   Building,
   Shield,
-  Activity
+  Activity,
+  ClipboardList,
+  TrendingUp
 } from "lucide-react"
 import { NavLink, useLocation } from "react-router-dom"
 
@@ -86,6 +88,23 @@ const menuItems = [
         url: "/situacoes", 
         icon: Activity,
         showFor: () => userType.FL_ADM_GERAL === '1'
+      }
+    ]
+  },
+  {
+    title: "Presença",
+    items: [
+      { 
+        title: "Lista de Presença", 
+        url: "/lista-presenca", 
+        icon: ClipboardList,
+        showFor: () => userType.FL_LIDER_GC === '1'
+      },
+      { 
+        title: "Relatório de Presença", 
+        url: "/relatorio-presenca", 
+        icon: TrendingUp,
+        showFor: () => userType.FL_LIDER_GC === '1'
       }
     ]
   },
