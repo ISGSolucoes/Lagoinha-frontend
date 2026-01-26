@@ -7,9 +7,10 @@ import { Card, CardContent, CardDescription, CardHeader, CardTitle } from "@/com
 import { Dialog, DialogContent, DialogDescription, DialogFooter, DialogHeader, DialogTitle, DialogTrigger } from "@/components/ui/dialog"
 import { Table, TableBody, TableCell, TableHead, TableHeader, TableRow } from "@/components/ui/table"
 import { Badge } from "@/components/ui/badge"
-import { Church, Plus, Search, Edit, Trash2, MapPin, Phone, Mail } from "lucide-react"
+import { Church, Plus, Search, Edit, Trash2, MapPin, Phone, Mail, Loader2 } from "lucide-react"
 import { useToast } from "@/hooks/use-toast"
-import { locationsEstadosService, locationsCidadesService, SituationService } from '../services/optionsService';
+import { locationsEstadosService, locationsCidadesService, SituationService } from '../services/optionsService'
+import igrejaService, { Igreja, IgrejaDTO } from '../services/igrejaService'
 
 interface Estado {
   UF: string;
@@ -26,244 +27,276 @@ interface Situacao {
   NOME: string;
 }
 
-interface Igreja {
-  id: number;
-  razaoSocial: string;
-  nomeFantasia: string;
-  cnpj: string;
-  endereco: string;
-  cep: string;
-  cd_cidade: number,
-  cidade: string;
-  estado: string;
-  telefone: string;
-  email: string;
-  cd_situacao: number,
-  situacao: string;
-}
-
 export default function Igrejas() {
   const [isDialogOpen, setIsDialogOpen] = useState(false)
+  const [isEditMode, setIsEditMode] = useState(false)
+  const [currentId, setCurrentId] = useState<number | null>(null)
   const [searchTerm, setSearchTerm] = useState("")
-  const [formData, setFormData] = useState({
-    razaoSocial: "",
-    nomeFantasia: "",
-    cnpj: "",
-    endereco: "",
-    cep: "",
-    cd_cidade: null,
-    cidade: "",
-    estado: "",
-    telefone: "",
+
+  const [formData, setFormData] = useState<IgrejaDTO>({
+    FANTASIA: "",
+    RAZAO_SOCIAL: "",
+    CNPJ: "",
+    ENDERECO: "",
+    CEP: "",
+    CD_CIDADE: 0,
+    fone: "",
     email: "",
-    cd_situacao: null,
-    situacao: ""
-  })
+    CD_SITUACAO: 0,
+  });
 
   const { toast } = useToast()
+  const [igrejas, setIgrejas] = useState<Igreja[]>([])
+  const [cidades, setCidades] = useState<Cidade[]>([])
+  const [estados, setEstados] = useState<Estado[]>([])
+  const [situacoes, setSituacoes] = useState<Situacao[]>([])
+  const [loading, setLoading] = useState(false)
+  const [loadingData, setLoadingData] = useState(true)
+  const [selectedEstado, setSelectedEstado] = useState("")
 
-  // Mock data - substitua por chamada API real
-  const [igrejas, setIgrejas] = useState<Igreja[]>([
-    {
-      id: 1,
-      razaoSocial: "Igreja Batista Central LTDA",
-      nomeFantasia: "Igreja Central",
-      cnpj: "12.345.678/0001-90",
-      endereco: "Rua Principal, 123",
-      cd_cidade: 10,
-      cidade: "São Paulo",
-      estado: "SP",
-      telefone: "(11) 99999-9999",
-      email: "central@igreja.com",
-      cd_situacao: 1,
-      situacao: "Ativa"
-    },
-    {
-      id: 2,
-      razaoSocial: "Igreja Evangélica Norte",
-      nomeFantasia: "Igreja Norte",
-      cnpj: "98.765.432/0001-10",
-      endereco: "Av. Norte, 456",
-      cd_cidade: 10,
-      cidade: "São Paulo",
-      estado: "SP",
-      telefone: "(11) 88888-8888",
-      email: "norte@igreja.com",
-      cd_situacao: 1,
-      situacao: "Ativa"
+  // Buscar todas as igrejas
+  const fetchIgrejas = async () => {
+    try {
+      setLoadingData(true)
+      const data = await igrejaService.getIgrejas()
+      setIgrejas(data)
+    } catch (error: any) {
+      console.error('Erro ao buscar igrejas:', error)
+      toast({
+        title: "Erro",
+        description: error.message || "Não foi possível carregar as supervisões",
+        variant: "destructive"
+      })
+    } finally {
+      setLoadingData(false)
     }
-  ])
+  }
 
-  const [cidades, setCidades] = useState<Cidade[]>([]);
-  const [estados, setEstados] = useState<Estado[]>([]);
-  const [situacoes, setSituacoes] = useState<Situacao[]>([]);
-  const [loading, setLoading] = useState(false);
-
-  // Buscar estados
+  // Buscar estados e situações (mantenha igual)
   const fetchEstados = async () => {
     try {
-      setLoading(true);
-      const response = await locationsEstadosService.getlocationsEstados();
-
-      const estadosArray = response.data;
-
-      if (!Array.isArray(estadosArray)) {
-        console.warn("Dados de estados não são um array:", estadosArray);
-        setEstados([]);
-        return;
-      }
-
-      setEstados(estadosArray);
-    } catch (error) {
-      console.error('Erro ao buscar estados:', error);
+      const response = await locationsEstadosService.getlocationsEstados()
+      setEstados(response.data || [])
+    } catch (error: any) {
+      console.error('Erro ao buscar estados:', error)
       toast({
         title: "Erro",
-        description: "Não foi possível carregar os estados",
+        description: error.message || "Não foi possível carregar os estados",
         variant: "destructive"
-      });
-    } finally {
-      setLoading(false);
+      })
     }
-  };
+  }
 
-  // Buscar cidades baseado no estado selecionado
-  const fetchCidades = async (estadoSigla: string) => {
-    if (!estadoSigla) {
-      setCidades([]);
-      return;
-    }
-
-    try {
-      setLoading(true);
-      const response = await locationsCidadesService.getlocationsCidades(estadoSigla);
-
-      const cidadesArray = response.data;
-
-      if (!Array.isArray(cidadesArray)) {
-        console.warn("Dados de cidades não são um array:", cidadesArray);
-        setCidades([]);
-        return;
-      }
-
-      setCidades(cidadesArray);
-    } catch (error) {
-      console.error('Erro ao buscar cidades:', error);
-      toast({
-        title: "Erro",
-        description: "Não foi possível carregar as cidades",
-        variant: "destructive"
-      });
-    } finally {
-      setLoading(false);
-    }
-  };
-
-  // Buscar situações
   const fetchSituacoes = async () => {
     try {
-      setLoading(true);
-      const response = await SituationService.getSituations();
-
-      const situacoesArray = response.data;
-
-      if (!Array.isArray(situacoesArray)) {
-        console.warn("Dados de situações não são um array:", situacoesArray);
-        setSituacoes([]);
-        return;
-      }
-
-      setSituacoes(situacoesArray);
-    } catch (error) {
-      console.error('Erro ao buscar situações:', error);
+      const response = await SituationService.getSituations()
+      setSituacoes(response.data || [])
+    } catch (error: any) {
+      console.error('Erro ao buscar situações:', error)
       toast({
         title: "Erro",
-        description: "Não foi possível carregar as situações",
+        description: error.message || "Não foi possível carregar as situações",
         variant: "destructive"
-      });
-    } finally {
-      setLoading(false);
+      })
     }
-  };
+  }
 
   // Handler para quando o estado é selecionado
-  const handleEstadoChange = (value: string) => {
+  const handleEstadoChange = async (value: string) => {
+    setSelectedEstado(value)
     setFormData(prev => ({
       ...prev,
-      estado: value,
-      cd_cidade: null
-      //      cidade: ""
-    }));
-    fetchCidades(value);
-  };
+      CD_CIDADE: 0
+    }))
+
+    try {
+      const response = await locationsCidadesService.getlocationsCidades(value)
+      setCidades(response.data || [])
+    } catch (error: any) {
+      console.error('Erro ao buscar cidades:', error)
+      toast({
+        title: "Erro",
+        description: error.message || "Não foi possível carregar as cidades",
+        variant: "destructive"
+      })
+    }
+  }
 
   // Handler para submit do formulário
   const handleSubmit = async (e: React.FormEvent) => {
-    e.preventDefault();
+    e.preventDefault()
 
-    try {
-      // Aqui você fará a chamada para sua API
-      // Exemplo:
-      // await apiService.cadastrarIgreja(formData);
-
-      console.log("Dados para envio:", formData);
-
-      toast({
-        title: "Supervisão cadastrada com sucesso!",
-        description: "A supervisão foi adicionada ao sistema.",
-      });
-
-      setIsDialogOpen(false);
-
-      // Reset form
-      setFormData({
-        razaoSocial: "",
-        nomeFantasia: "",
-        cnpj: "",
-        endereco: "",
-        cep: "",
-        cd_cidade: null,
-        cidade: "",
-        estado: "",
-        telefone: "",
-        email: "",
-        cd_situacao: null,
-        situacao: ""
-      });
-
-      // Limpa cidades quando fecha o dialog
-      setCidades([]);
-
-    } catch (error) {
-      console.error('Erro ao cadastrar supervisão:', error);
+    // Validação
+    if (!formData.CD_CIDADE || formData.CD_CIDADE === 0) {
       toast({
         title: "Erro",
-        description: "Não foi possível cadastrar a supervisão",
+        description: "Por favor, selecione uma cidade",
         variant: "destructive"
-      });
+      })
+      return
     }
-  };
+
+    if (!formData.CD_SITUACAO || formData.CD_SITUACAO === 0) {
+      toast({
+        title: "Erro",
+        description: "Por favor, selecione uma situação",
+        variant: "destructive"
+      })
+      return
+    }
+
+    setLoading(true)
+
+    try {
+      if (isEditMode && currentId) {
+        await igrejaService.updateIgreja(currentId, formData)
+        toast({
+          title: "Supervisão atualizada com sucesso!",
+          description: "A supervisão foi atualizada no sistema.",
+        })
+      } else {
+        await igrejaService.createIgreja(formData)
+        toast({
+          title: "Supervisão cadastrada com sucesso!",
+          description: "A supervisão foi adicionada ao sistema.",
+        })
+      }
+
+      setIsDialogOpen(false)
+      resetForm()
+      fetchIgrejas()
+
+    } catch (error: any) {
+      console.error('Erro ao salvar supervisão:', error)
+      toast({
+        title: "Erro",
+        description: error.response?.data?.erro || "Não foi possível salvar a supervisão",
+        variant: "destructive"
+      })
+    } finally {
+      setLoading(false)
+    }
+  }
+
+  // Handler para editar
+  const handleEdit = async (igreja: Igreja) => {
+    try {
+      // Buscar detalhes completos da igreja
+      const response = await igrejaService.getIgrejaById(igreja.id)
+      const igrejaDetalhes = response.data
+
+      console.log('Retorno api 2 response: ', response)
+
+      console.log('Retorno api 2 igreja: ', igreja)
+
+      setIsEditMode(true)
+      setCurrentId(igreja.id)
+
+      // Se a igreja tiver estado, buscar cidades
+      if (igreja.estado) {
+        setSelectedEstado(igreja.estado)
+        await handleEstadoChange(igreja.estado)
+      }
+
+     
+      setFormData({
+        FANTASIA: response.FANTASIA || igreja.nomeFantasia,
+        RAZAO_SOCIAL: response.RAZAO_SOCIAL || igreja.razaoSocial,
+        CNPJ: response.CNPJ || igreja.cnpj,
+        ENDERECO: response.ENDERECO || igreja.endereco,
+        CEP: response.CEP || igreja.cep,
+        CD_CIDADE: response.CD_CIDADE || igreja.cd_cidade,
+        fone: response.fone || igreja.telefone,
+        email: response.email || igreja.email,
+        CD_SITUACAO: response.CD_SITUACAO || 1,
+        ESTADO: response.estado || igreja.estado
+      })
+
+      setIsDialogOpen(true)
+    } catch (error) {
+      console.error('Erro ao carregar dados para edição:', error)
+      // Se falhar ao buscar detalhes, usar dados básicos
+      setIsEditMode(true)
+      setCurrentId(igreja.id)
+      setFormData({
+        FANTASIA: igreja.nomeFantasia,
+        RAZAO_SOCIAL: "",
+        CNPJ: igreja.cnpj,
+        ENDERECO: "",
+        CEP: "",
+        CD_CIDADE: igreja.cd_cidade,
+        fone: igreja.telefone,
+        email: igreja.email,
+        CD_SITUACAO: igreja.situacao === "Ativa" ? 1 : 2,
+      })
+      setIsDialogOpen(true)
+    }
+  }
+
+  // Handler para deletar
+  const handleDelete = async (id: number) => {
+    if (!confirm("Tem certeza que deseja excluir esta supervisão?")) {
+      return
+    }
+
+    try {
+      await igrejaService.deleteIgreja(id)
+      toast({
+        title: "Supervisão excluída com sucesso!",
+        description: "A supervisão foi removida do sistema.",
+      })
+      fetchIgrejas()
+    } catch (error: any) {
+      console.error('Erro ao excluir supervisão:', error)
+      toast({
+        title: "Erro",
+        description: error.response?.data?.erro || "Não foi possível excluir a supervisão",
+        variant: "destructive"
+      })
+    }
+  }
+
+  // Resetar formulário
+  const resetForm = () => {
+    setFormData({
+      FANTASIA: "",
+      RAZAO_SOCIAL: "",
+      CNPJ: "",
+      ENDERECO: "",
+      CEP: "",
+      CD_CIDADE: 0,
+      fone: "",
+      email: "",
+      CD_SITUACAO: 0,
+    })
+    setSelectedEstado("")
+    setIsEditMode(false)
+    setCurrentId(null)
+    setCidades([])
+  }
 
   // Handler para quando o dialog é fechado
   const handleDialogClose = (open: boolean) => {
-    setIsDialogOpen(open);
+    setIsDialogOpen(open)
     if (!open) {
-      // Limpa cidades quando fecha o dialog
-      setCidades([]);
+      resetForm()
     }
-  };
+  }
 
+  // Inicialização
   useEffect(() => {
-    fetchEstados();
-    fetchSituacoes();
-  }, []);
+    fetchIgrejas()
+    fetchEstados()
+    fetchSituacoes()
+  }, [])
 
-  const updateFormData = (field: string, value: string | number) => {
+  const updateFormData = (field: keyof IgrejaDTO, value: string | number) => {
     setFormData(prev => ({ ...prev, [field]: value }))
   }
 
   const filteredIgrejas = igrejas.filter(igreja =>
     igreja.nomeFantasia.toLowerCase().includes(searchTerm.toLowerCase()) ||
-    igreja.razaoSocial.toLowerCase().includes(searchTerm.toLowerCase())
+    igreja.cnpj.includes(searchTerm)
   )
 
   return (
@@ -275,82 +308,87 @@ export default function Igrejas() {
         </div>
         <Dialog open={isDialogOpen} onOpenChange={handleDialogClose}>
           <DialogTrigger asChild>
-            <Button className="bg-gradient-warm hover:opacity-90 transition-opacity">
+            <Button
+              className="bg-gradient-warm hover:opacity-90 transition-opacity"
+              onClick={() => setIsEditMode(false)}
+            >
               <Plus className="h-4 w-4 mr-2" />
               Nova Supervisão
             </Button>
           </DialogTrigger>
           <DialogContent className="w-full max-w-[95vw] sm:max-w-[600px] max-h-[95vh] overflow-y-auto">
             <DialogHeader>
-              <DialogTitle>Cadastrar Nova Supervisão</DialogTitle>
+              <DialogTitle>
+                {isEditMode ? "Editar Supervisão" : "Cadastrar Nova Supervisão"}
+              </DialogTitle>
               <DialogDescription>
-                Preencha os dados da supervisão que será cadastrada no sistema.
+                {isEditMode
+                  ? "Atualize os dados da supervisão selecionada."
+                  : "Preencha os dados da supervisão que será cadastrada no sistema."
+                }
               </DialogDescription>
             </DialogHeader>
             <form onSubmit={handleSubmit}>
               <div className="grid gap-4 py-4">
                 <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
                   <div className="space-y-2">
-                    <Label htmlFor="razaoSocial">Razão Social</Label>
+                    <Label htmlFor="FANTASIA">Nome Fantasia *</Label>
                     <Input
-                      id="razaoSocial"
-                      value={formData.razaoSocial}
-                      onChange={(e) => updateFormData("razaoSocial", e.target.value)}
-                      placeholder="Razão social da Supervisão/Igreja"
+                      id="FANTASIA"
+                      value={formData.FANTASIA}
+                      onChange={(e) => updateFormData("FANTASIA", e.target.value)}
+                      placeholder="Nome fantasia"
                       required
                     />
                   </div>
                   <div className="space-y-2">
-                    <Label htmlFor="nomeFantasia">Nome Fantasia</Label>
+                    <Label htmlFor="RAZAO_SOCIAL">Razão Social</Label>
                     <Input
-                      id="nomeFantasia"
-                      value={formData.nomeFantasia}
-                      onChange={(e) => updateFormData("nomeFantasia", e.target.value)}
-                      placeholder="Nome fantasia"
-                      required
+                      id="RAZAO_SOCIAL"
+                      value={formData.RAZAO_SOCIAL}
+                      onChange={(e) => updateFormData("RAZAO_SOCIAL", e.target.value)}
+                      placeholder="Razão social (opcional)"
                     />
                   </div>
                 </div>
 
                 <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
                   <div className="space-y-2">
-                    <Label htmlFor="cnpj">CNPJ</Label>
+                    <Label htmlFor="CNPJ">CNPJ *</Label>
                     <Input
-                      id="cnpj"
-                      value={formData.cnpj}
-                      onChange={(e) => updateFormData("cnpj", e.target.value)}
+                      id="CNPJ"
+                      value={formData.CNPJ}
+                      onChange={(e) => updateFormData("CNPJ", e.target.value)}
                       placeholder="00.000.000/0000-00"
                       required
                     />
                   </div>
                   <div className="space-y-2">
-                    <Label htmlFor="cep">CEP</Label>
+                    <Label htmlFor="CEP">CEP</Label>
                     <Input
-                      id="cep"
-                      value={formData.cep}
-                      onChange={(e) => updateFormData("cep", e.target.value)}
+                      id="CEP"
+                      value={formData.CEP}
+                      onChange={(e) => updateFormData("CEP", e.target.value)}
                       placeholder="00000-000"
-                      required
                     />
                   </div>
                 </div>
 
                 <div className="space-y-2">
-                  <Label htmlFor="endereco">Endereço</Label>
+                  <Label htmlFor="ENDERECO">Endereço</Label>
                   <Input
-                    id="endereco"
-                    value={formData.endereco}
-                    onChange={(e) => updateFormData("endereco", e.target.value)}
+                    id="ENDERECO"
+                    value={formData.ENDERECO}
+                    onChange={(e) => updateFormData("ENDERECO", e.target.value)}
                     placeholder="Rua, número, bairro"
-                    required
                   />
                 </div>
 
                 <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
                   <div className="space-y-2">
-                    <Label htmlFor="estado">Estado</Label>
+                    <Label htmlFor="estado">Estado *</Label>
                     <Select
-                      value={formData.estado}
+                      value={selectedEstado}
                       onValueChange={handleEstadoChange}
                     >
                       <SelectTrigger>
@@ -366,24 +404,26 @@ export default function Igrejas() {
                     </Select>
                   </div>
                   <div className="space-y-2">
-                    <Label htmlFor="cidade">Cidade</Label>
+                    <Label htmlFor="CD_CIDADE">Cidade *</Label>
                     <Select
-                      value={formData.cd_cidade ? String(formData.cd_cidade) : ""}
-                      onValueChange={(value) => updateFormData("cd_cidade", Number(value))}
-                      disabled={!formData.estado || cidades.length === 0}
+                      value={formData.CD_CIDADE ? String(formData.CD_CIDADE) : ""}
+                      onValueChange={(value) => updateFormData("CD_CIDADE", Number(value))}
+                      disabled={!selectedEstado || cidades.length === 0}
                     >
                       <SelectTrigger>
-                        <SelectValue placeholder={
-                          !formData.estado
-                            ? "Selecione primeiro o estado"
-                            : cidades.length === 0
-                              ? "Carregando cidades..."
-                              : "Selecione a cidade"
-                        } />
+                        <SelectValue
+                          placeholder={
+                            !selectedEstado
+                              ? "Selecione primeiro o estado"
+                              : cidades.length === 0
+                                ? "Carregando cidades..."
+                                : "Selecione a cidade"
+                          }
+                        />
                       </SelectTrigger>
                       <SelectContent>
                         {cidades.map((cidade) => (
-                          <SelectItem key={cidade.CD_CIDADE} value={cidade.CD_CIDADE}>
+                          <SelectItem key={cidade.CD_CIDADE} value={String(cidade.CD_CIDADE)}>
                             {cidade.NOME}
                           </SelectItem>
                         ))}
@@ -394,11 +434,11 @@ export default function Igrejas() {
 
                 <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
                   <div className="space-y-2">
-                    <Label htmlFor="telefone">Telefone</Label>
+                    <Label htmlFor="fone">Telefone</Label>
                     <Input
-                      id="telefone"
-                      value={formData.telefone}
-                      onChange={(e) => updateFormData("telefone", e.target.value)}
+                      id="fone"
+                      value={formData.fone}
+                      onChange={(e) => updateFormData("fone", e.target.value)}
                       placeholder="(00) 00000-0000"
                     />
                   </div>
@@ -415,10 +455,10 @@ export default function Igrejas() {
                 </div>
 
                 <div className="space-y-2">
-                  <Label htmlFor="situacao">Situação</Label>
+                  <Label htmlFor="CD_SITUACAO">Situação *</Label>
                   <Select
-                    value={formData.cd_situacao ? String(formData.cd_situacao) : ""}
-                    onValueChange={(value) => updateFormData("cd_situacao", Number(value))}
+                    value={formData.CD_SITUACAO ? String(formData.CD_SITUACAO) : ""}
+                    onValueChange={(value) => updateFormData("CD_SITUACAO", Number(value))}
                   >
                     <SelectTrigger>
                       <SelectValue placeholder="Selecione a situação" />
@@ -439,7 +479,11 @@ export default function Igrejas() {
                   className="bg-gradient-warm hover:opacity-90 transition-opacity"
                   disabled={loading}
                 >
-                  {loading ? "Cadastrando..." : "Cadastrar Supervisão"}
+                  {loading && <Loader2 className="mr-2 h-4 w-4 animate-spin" />}
+                  {loading
+                    ? (isEditMode ? "Atualizando..." : "Cadastrando...")
+                    : (isEditMode ? "Atualizar Supervisão" : "Cadastrar Supervisão")
+                  }
                 </Button>
               </DialogFooter>
             </form>
@@ -447,7 +491,6 @@ export default function Igrejas() {
         </Dialog>
       </div>
 
-      {/* Resto do seu código permanece igual */}
       <div className="flex items-center gap-4">
         <div className="relative flex-1 max-w-sm">
           <Search className="absolute left-3 top-1/2 transform -translate-y-1/2 h-4 w-4 text-muted-foreground" />
@@ -460,7 +503,6 @@ export default function Igrejas() {
         </div>
       </div>
 
-      {/* Table - código permanece igual */}
       <Card className="shadow-soft border-border/50">
         <CardHeader>
           <CardTitle className="flex items-center gap-2">
@@ -472,112 +514,142 @@ export default function Igrejas() {
           </CardDescription>
         </CardHeader>
         <CardContent>
-          {/* Seu código da table permanece igual */}
-          <div className="md:hidden space-y-4">
-            {filteredIgrejas.map((igreja) => (
-              <Card key={igreja.id} className="p-4">
-                <div className="space-y-3">
-                  <div className="flex justify-between items-start">
-                    <div>
-                      <div className="font-medium">{igreja.nomeFantasia}</div>
-                      <div className="text-sm text-muted-foreground">{igreja.razaoSocial}</div>
-                    </div>
-                    <Badge variant={igreja.situacao === "Ativa" ? "default" : "secondary"}>
-                      {igreja.situacao}
-                    </Badge>
-                  </div>
-
-                  <div className="text-sm font-mono">{igreja.cnpj}</div>
-
-                  <div className="flex items-center gap-1">
-                    <MapPin className="h-3 w-3 text-muted-foreground" />
-                    <span className="text-sm">{igreja.cidade}, {igreja.estado}</span>
-                  </div>
-
-                  <div className="space-y-1">
-                    <div className="flex items-center gap-1 text-sm">
-                      <Phone className="h-3 w-3 text-muted-foreground" />
-                      {igreja.telefone}
-                    </div>
-                    <div className="flex items-center gap-1 text-sm">
-                      <Mail className="h-3 w-3 text-muted-foreground" />
-                      {igreja.email}
-                    </div>
-                  </div>
-
-                  <div className="flex justify-end gap-2 pt-2 border-t">
-                    <Button variant="ghost" size="sm">
-                      <Edit className="h-4 w-4" />
-                    </Button>
-                    <Button variant="ghost" size="sm" className="text-destructive hover:text-destructive">
-                      <Trash2 className="h-4 w-4" />
-                    </Button>
-                  </div>
-                </div>
-              </Card>
-            ))}
-          </div>
-
-          <div className="hidden md:block">
-            <Table>
-              <TableHeader>
-                <TableRow>
-                  <TableHead>Nome</TableHead>
-                  <TableHead>CNPJ</TableHead>
-                  <TableHead>Localização</TableHead>
-                  <TableHead>Contato</TableHead>
-                  <TableHead>Situação</TableHead>
-                  <TableHead className="text-right">Ações</TableHead>
-                </TableRow>
-              </TableHeader>
-              <TableBody>
+          {loadingData ? (
+            <div className="text-center py-8 flex items-center justify-center">
+              <Loader2 className="h-8 w-8 animate-spin mr-2" />
+              Carregando...
+            </div>
+          ) : filteredIgrejas.length === 0 ? (
+            <div className="text-center py-8 text-muted-foreground">
+              {searchTerm ? "Nenhuma supervisão encontrada com esse termo" : "Nenhuma supervisão cadastrada"}
+            </div>
+          ) : (
+            <>
+              <div className="md:hidden space-y-4">
                 {filteredIgrejas.map((igreja) => (
-                  <TableRow key={igreja.id}>
-                    <TableCell>
-                      <div>
-                        <div className="font-medium">{igreja.nomeFantasia}</div>
-                        <div className="text-sm text-muted-foreground">{igreja.razaoSocial}</div>
+                  <Card key={igreja.id} className="p-4">
+                    <div className="space-y-3">
+                      <div className="flex justify-between items-start">
+                        <div>
+                          <div className="font-medium">{igreja.nomeFantasia}</div>
+                          <div className="text-sm text-muted-foreground">{igreja.razaoSocial}</div>
+                        </div>
+                        <Badge variant={igreja.situacao === "Ativa" ? "default" : "secondary"}>
+                          {igreja.situacao}
+                        </Badge>
                       </div>
-                    </TableCell>
-                    <TableCell className="font-mono text-sm">{igreja.cnpj}</TableCell>
-                    <TableCell>
+
+                      <div className="text-sm font-mono">{igreja.cnpj}</div>
+
                       <div className="flex items-center gap-1">
                         <MapPin className="h-3 w-3 text-muted-foreground" />
                         <span className="text-sm">{igreja.cidade}, {igreja.estado}</span>
                       </div>
-                    </TableCell>
-                    <TableCell>
+
                       <div className="space-y-1">
                         <div className="flex items-center gap-1 text-sm">
                           <Phone className="h-3 w-3 text-muted-foreground" />
-                          {igreja.telefone}
+                          {igreja.telefone || "Não informado"}
                         </div>
                         <div className="flex items-center gap-1 text-sm">
                           <Mail className="h-3 w-3 text-muted-foreground" />
-                          {igreja.email}
+                          {igreja.email || "Não informado"}
                         </div>
                       </div>
-                    </TableCell>
-                    <TableCell>
-                      <Badge variant={igreja.situacao === "Ativa" ? "default" : "secondary"}>
-                        {igreja.situacao}
-                      </Badge>
-                    </TableCell>
-                    <TableCell className="text-right">
-                      <div className="flex items-center justify-end gap-2">
-                        <Button variant="ghost" size="sm">
+
+                      <div className="flex justify-end gap-2 pt-2 border-t">
+                        <Button
+                          variant="ghost"
+                          size="sm"
+                          onClick={() => handleEdit(igreja)}
+                        >
                           <Edit className="h-4 w-4" />
                         </Button>
-                        <Button variant="ghost" size="sm" className="text-destructive hover:text-destructive">
+                        <Button
+                          variant="ghost"
+                          size="sm"
+                          className="text-destructive hover:text-destructive"
+                          onClick={() => handleDelete(igreja.id)}
+                        >
                           <Trash2 className="h-4 w-4" />
                         </Button>
                       </div>
-                    </TableCell>
-                  </TableRow>
+                    </div>
+                  </Card>
                 ))}
-              </TableBody>
-            </Table>
-          </div>
+              </div>
+
+              <div className="hidden md:block">
+                <Table>
+                  <TableHeader>
+                    <TableRow>
+                      <TableHead>Nome</TableHead>
+                      <TableHead>CNPJ</TableHead>
+                      <TableHead>Localização</TableHead>
+                      <TableHead>Contato</TableHead>
+                      <TableHead>Situação</TableHead>
+                      <TableHead className="text-right">Ações</TableHead>
+                    </TableRow>
+                  </TableHeader>
+                  <TableBody>
+                    {filteredIgrejas.map((igreja) => (
+                      <TableRow key={igreja.id}>
+                        <TableCell>
+                          <div>
+                            <div className="font-medium">{igreja.nomeFantasia}</div>
+                            <div className="text-sm text-muted-foreground">{igreja.razaoSocial}</div>
+                          </div>
+                        </TableCell>
+                        <TableCell className="font-mono text-sm">{igreja.cnpj}</TableCell>
+                        <TableCell>
+                          <div className="flex items-center gap-1">
+                            <MapPin className="h-3 w-3 text-muted-foreground" />
+                            <span className="text-sm">{igreja.cidade}, {igreja.estado}</span>
+                          </div>
+                        </TableCell>
+                        <TableCell>
+                          <div className="space-y-1">
+                            <div className="flex items-center gap-1 text-sm">
+                              <Phone className="h-3 w-3 text-muted-foreground" />
+                              {igreja.telefone || "Não informado"}
+                            </div>
+                            <div className="flex items-center gap-1 text-sm">
+                              <Mail className="h-3 w-3 text-muted-foreground" />
+                              {igreja.email || "Não informado"}
+                            </div>
+                          </div>
+                        </TableCell>
+                        <TableCell>
+                          <Badge variant={igreja.situacao === "Ativa" ? "default" : "secondary"}>
+                            {igreja.situacao}
+                          </Badge>
+                        </TableCell>
+                        <TableCell className="text-right">
+                          <div className="flex items-center justify-end gap-2">
+                            <Button
+                              variant="ghost"
+                              size="sm"
+                              onClick={() => handleEdit(igreja)}
+                            >
+                              <Edit className="h-4 w-4" />
+                            </Button>
+                            <Button
+                              variant="ghost"
+                              size="sm"
+                              className="text-destructive hover:text-destructive"
+                              onClick={() => handleDelete(igreja.id)}
+                            >
+                              <Trash2 className="h-4 w-4" />
+                            </Button>
+                          </div>
+                        </TableCell>
+                      </TableRow>
+                    ))}
+                  </TableBody>
+                </Table>
+              </div>
+            </>
+          )}
         </CardContent>
       </Card>
     </div>
