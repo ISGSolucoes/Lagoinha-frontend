@@ -7,6 +7,7 @@ import { Card, CardContent, CardDescription, CardFooter, CardHeader, CardTitle }
 import { Church, Mail, Lock, Eye, EyeOff } from "lucide-react"
 import { useToast } from "@/hooks/use-toast"
 import churchBackground from "@/assets/church-background.jpg"
+import { AuthService } from '@/services/optionsService';
 
 export default function Login() {
   const [email, setEmail] = useState("")
@@ -17,33 +18,31 @@ export default function Login() {
   const { toast } = useToast()
 
   const handleLogin = async (e: React.FormEvent) => {
-    e.preventDefault()
-    setIsLoading(true)
-    
+    e.preventDefault();
+    setIsLoading(true);
+
     try {
-      // Simulate API call
-      await new Promise(resolve => setTimeout(resolve, 1000))
-      
-      // Mock successful login
+      const dados = await AuthService.login(email, password);
+      localStorage.setItem('token', dados.token);
       toast({
-        title: "Login realizado com sucesso!",
-        description: "Bem-vindo ao Sistema de Gestão de Igrejas.",
-      })
-      
-      navigate("/dashboard")
+        title: "Login realizado!",
+        description: `Bem-vindo, ${dados.user?.name}!`
+      });
+
+      navigate("/dashboard");
     } catch (error) {
       toast({
         title: "Erro ao fazer login",
-        description: "Verifique suas credenciais e tente novamente.",
+        description: error.message || "Verifique suas credenciais e tente novamente.",
         variant: "destructive",
-      })
+      });
     } finally {
-      setIsLoading(false)
+      setIsLoading(false);
     }
-  }
+  };
 
   return (
-    <div 
+    <div
       className="min-h-screen flex items-center justify-center p-4 relative"
       style={{
         backgroundImage: `url(${churchBackground})`,
@@ -54,7 +53,7 @@ export default function Login() {
     >
       {/* Overlay */}
       <div className="absolute inset-0 bg-background/80 backdrop-blur-sm"></div>
-      
+
       {/* Content */}
       <div className="relative z-10 w-full max-w-md space-y-6 animate-fade-in">
         <div className="text-center space-y-4">
@@ -121,8 +120,8 @@ export default function Login() {
               </div>
             </CardContent>
             <CardFooter className="space-y-4 flex-col">
-              <Button 
-                type="submit" 
+              <Button
+                type="submit"
                 variant="church"
                 className="w-full"
                 disabled={isLoading}

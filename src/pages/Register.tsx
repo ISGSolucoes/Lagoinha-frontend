@@ -1,4 +1,6 @@
-import { useState } from "react"
+import React from 'react';
+
+import { useEffect, useState } from "react"
 import { Link, useNavigate } from "react-router-dom"
 import { Button } from "@/components/ui/button"
 import { Input } from "@/components/ui/input"
@@ -8,66 +10,193 @@ import { Card, CardContent, CardDescription, CardFooter, CardHeader, CardTitle }
 import { Church, User, Mail, Lock, CreditCard, Building } from "lucide-react"
 import { useToast } from "@/hooks/use-toast"
 import churchBackground from "@/assets/church-background.jpg"
+import { UserTypeService, ChurchService, AuthService } from '../services/optionsService';
+
+interface SpinnerProps extends React.SVGProps<SVGSVGElement> {
+  className?: string;
+}
+
+
+export function Spinner({ className, ...props }: SpinnerProps) {
+  return (
+    <svg
+      className={`animate-spin ${className}`}
+      xmlns="http://www.w3.org/2000/svg"
+      fill="none"
+      viewBox="0 0 24 24"
+      {...props}
+    >
+      <circle
+        className="opacity-25"
+        cx="12"
+        cy="12"
+        r="10"
+        stroke="currentColor"
+        strokeWidth="4"
+      />
+      <path
+        className="opacity-75"
+        fill="currentColor"
+        d="M4 12a8 8 0 018-8V0C5.373 0 0 5.373 0 12h4zm2 5.291A7.962 7.962 0 014 12H0c0 3.042 1.135 5.824 3 7.938l3-2.647z"
+      />
+    </svg>
+  );
+}
 
 export default function Register() {
+
+  const [loadingState, setLoadingState] = useState<{
+    options: boolean;
+    submit: boolean;
+  }>({
+    options: true,
+    submit: false
+  })
+
+  const validateForm = (): { valid: boolean; errors: string[] } => {
+    const errors: string[] = [];
+
+    if (!formData.nome.trim()) errors.push("Nome é obrigatório");
+    if (!/^\d{3}\.\d{3}\.\d{3}-\d{2}$/.test(formData.cpf)) errors.push("CPF inválido");
+    if (!/^[^\s@]+@[^\s@]+\.[^\s@]+$/.test(formData.email)) errors.push("Email inválido");
+    if (formData.senha.length < 6) errors.push("Senha deve ter pelo menos 6 caracteres");
+    if (formData.senha !== formData.confirmarSenha) errors.push("As senhas não coincidem");
+    if (!formData.cd_tipo) errors.push("Selecione um tipo de usuário");
+    if (!formData.cd_igreja) errors.push("Selecione uma igreja");
+
+    return {
+      valid: errors.length === 0,
+      errors
+    };
+  };
+
   const [formData, setFormData] = useState({
     nome: "",
     cpf: "",
     email: "",
     senha: "",
     confirmarSenha: "",
-    tipoUsuario: "",
-    igreja: ""
+    cd_tipo: null,
+    cd_igreja: null,
+    cd_situacao: "1", // 1 - Ativo
+    cd_cidade: null
   })
   const [isLoading, setIsLoading] = useState(false)
   const navigate = useNavigate()
   const { toast } = useToast()
 
-  const tiposUsuario = [
-    { value: "admin_geral", label: "Administrador Geral" },
-    { value: "admin_gcs", label: "Administrador de GCs" },
-    { value: "lider_gc", label: "Líder de GC" },
-    { value: "membro", label: "Membro" }
-  ]
+  const [tiposUsuario, setTiposUsuario] = useState([]);
+  const [igrejas, setIgrejas] = useState([]);
 
-  const igrejas = [
-    { value: "igreja1", label: "Igreja Central" },
-    { value: "igreja2", label: "Igreja Norte" },
-    { value: "igreja3", label: "Igreja Sul" }
-  ]
+  // Busca opções ao carregar o componente
+  useEffect(() => {
+    const controller = new AbortController();
 
+    const fetchOptions = async () => {
+      try {
+        const tiposData = await UserTypeService.getUserTypes();
+        const igrejasData = await ChurchService.getChurches();
+
+        console.log('Tipos Data:', tiposData);
+        console.log('Igrejas Data:', igrejasData)
+
+        if (!tiposData || !igrejasData) {
+          throw new Error("Dados inválidos recebidos do servidor");
+        }
+
+        const tiposArray = typeof tiposData === 'string' ? JSON.parse(tiposData) : tiposData;
+        const igrejasArray = typeof igrejasData === 'string' ? JSON.parse(igrejasData) : igrejasData;
+
+        // Verificar se são arrays
+        if (!Array.isArray(tiposArray) || !Array.isArray(igrejasArray)) {
+          throw new Error("Dados recebidos não são arrays válidos");
+        }
+
+        console.log('Tipos Array:', tiposArray);
+        console.log('Igrejas Array:', igrejasArray);
+
+        setTiposUsuario(tiposArray);
+        setIgrejas(igrejasArray);
+
+        // setTiposUsuario(tiposData);
+        // setIgrejas(igrejasData);
+      } catch (error) {
+        console.error('Erro ao buscar opções:', error);
+      } finally {
+        setLoadingState(prev => ({ ...prev, options: false }));
+      }
+    };
+
+    fetchOptions();
+
+    return () => controller.abort();
+  }, [])
+
+  const handleIgrejaChange = (igrejaId: string) => {
+    const igrejaSelecionada = igrejas.find(igreja => {
+      const value = igreja.id || igreja.cd_igreja || igreja.value || igreja.ID;
+      return value.toString() === igrejaId;
+    });
+
+    console.log('Entrou: handleIgrejaChange')
+
+    setFormData(prev => ({
+      ...prev,
+      cd_igreja: igrejaId,
+      cd_cidade: igrejaSelecionada?.CD_CIDADE
+    }));
+
+    console.log('Dados igreja: ', igrejaSelecionada)
+
+    console.log('Dados Cidade: ',igrejaSelecionada?.CD_CIDADE)
+  };
   const handleSubmit = async (e: React.FormEvent) => {
-    e.preventDefault()
-    
-    if (formData.senha !== formData.confirmarSenha) {
+    e.preventDefault();
+
+    const validation = validateForm();
+    if (!validation.valid) {
       toast({
-        title: "Erro",
-        description: "As senhas não coincidem.",
+        title: "Erro de validação",
+        description: validation.errors.join(", "),
         variant: "destructive",
-      })
-      return
+      });
+      return;
     }
 
-    setIsLoading(true)
-    
+    setLoadingState(prev => ({ ...prev, submit: true }));
+
     try {
-      // Simulate API call to /cadastro-usuario
-      await new Promise(resolve => setTimeout(resolve, 1500))
-      
+      console.log('Dados a serem salvos: ', formData)
+      const dados = await AuthService.register({
+        ...formData,
+        cd_tipo: Number(formData.cd_tipo),
+        cd_igreja: Number(formData.cd_igreja),
+        cd_cidade: Number(formData.cd_cidade)
+      });
+
       toast({
-        title: "Cadastro realizado com sucesso!",
-        description: "Agora você pode fazer login no sistema.",
-      })
-      
-      navigate("/login")
+        title: "Sucesso!",
+        description: "Cadastro realizado com sucesso. Redirecionando...",
+      });
+
+      // Redireciona após 2 segundos
+      setTimeout(() => navigate("/login"), 2000);
+
     } catch (error) {
-      toast({
-        title: "Erro ao cadastrar",
-        description: "Tente novamente mais tarde.",
-        variant: "destructive",
-      })
+      if (error instanceof Error) {
+        console.error("Erro no cadastro:", error.message);
+
+        toast({
+          title: "Erro!",
+          description: "Erro ao tentar cadastrar",
+        });
+
+
+      } else {
+        console.error('Erro desconhecido', error);
+      }
     } finally {
-      setIsLoading(false)
+      setLoadingState(prev => ({ ...prev, submit: false }));
     }
   }
 
@@ -76,7 +205,7 @@ export default function Register() {
   }
 
   return (
-    <div 
+    <div
       className="min-h-screen flex items-center justify-center p-4 relative"
       style={{
         backgroundImage: `url(${churchBackground})`,
@@ -87,7 +216,7 @@ export default function Register() {
     >
       {/* Overlay */}
       <div className="absolute inset-0 bg-background/80 backdrop-blur-sm"></div>
-      
+
       {/* Content */}
       <div className="relative z-10 w-full max-w-lg space-y-6 animate-fade-in">
         <div className="text-center space-y-4">
@@ -192,45 +321,97 @@ export default function Register() {
               </div>
 
               <div className="space-y-2">
-                <Label htmlFor="tipoUsuario">Tipo de Usuário</Label>
-                <Select onValueChange={(value) => updateFormData("tipoUsuario", value)} required>
+                <Label htmlFor="cd_tipo">Tipo de Usuário</Label>
+                <Select
+                  onValueChange={(value) => updateFormData("cd_tipo", value)}
+                  disabled={loadingState.options}
+                  required
+                  value={formData.cd_tipo}
+                >
                   <SelectTrigger>
-                    <SelectValue placeholder="Selecione o tipo de usuário" />
+                    <SelectValue placeholder={loadingState.options ? "Carregando..." : "Selecione o tipo"} />
                   </SelectTrigger>
                   <SelectContent>
-                    {tiposUsuario.map((tipo) => (
-                      <SelectItem key={tipo.value} value={tipo.value}>
-                        {tipo.label}
+                    {loadingState.options ? (
+                      <SelectItem disabled value="loading">
+                        Carregando...
                       </SelectItem>
-                    ))}
+                    ) : tiposUsuario.length > 0 ? (
+                      tiposUsuario.map((tipo, index) => {
+                        // Versão segura - adapte conforme a estrutura real dos dados
+                        const value = tipo.id || tipo.cd_tipo || tipo.value || tipo.ID || index;
+                        const label = tipo.nome || tipo.descricao || tipo.label || tipo.NOME || tipo.LABEL || `Tipo ${index + 1}`;
+
+                        return (
+                          <SelectItem key={value} value={value.toString()}>
+                            {label}
+                          </SelectItem>
+                        );
+                      })
+                    ) : (
+                      <SelectItem disabled value="none">
+                        Nenhuma opção disponível
+                      </SelectItem>
+                    )}
                   </SelectContent>
                 </Select>
               </div>
 
               <div className="space-y-2">
-                <Label htmlFor="igreja">Igreja</Label>
-                <Select onValueChange={(value) => updateFormData("igreja", value)} required>
+                <Label htmlFor="cd_igreja">Igreja</Label>
+                <Select
+                  //onValueChange={(value) => updateFormData("cd_igreja", value)}
+                  onValueChange={handleIgrejaChange}
+                  disabled={loadingState.options}
+                  required
+                  value={formData.cd_igreja}
+                >
                   <SelectTrigger>
-                    <SelectValue placeholder="Selecione sua igreja" />
+                    <SelectValue placeholder={loadingState.options ? "Carregando..." : "Selecione a igreja"} />
                   </SelectTrigger>
                   <SelectContent>
-                    {igrejas.map((igreja) => (
-                      <SelectItem key={igreja.value} value={igreja.value}>
-                        {igreja.label}
+                    {loadingState.options ? (
+                      <SelectItem disabled value="loading">
+                        Carregando...
                       </SelectItem>
-                    ))}
+                    ) : igrejas.length > 0 ? (
+                      igrejas.map((igreja, index) => {
+                        // Versão segura - adapte conforme a estrutura real dos dados
+                        const value = igreja.id || igreja.cd_igreja || igreja.value || igreja.ID || index;
+                        const label = igreja.nome || igreja.descricao || igreja.label || igreja.NOME || igreja.LABEL || `Igreja ${index + 1}`;
+
+                        return (
+                          <SelectItem key={value} value={value.toString()}>
+                            {label}
+                          </SelectItem>
+                        );
+                      })
+                    ) : (
+                      <SelectItem disabled value="none">
+                        Nenhuma opção disponível
+                      </SelectItem>
+                    )}
                   </SelectContent>
                 </Select>
               </div>
             </CardContent>
             <CardFooter className="space-y-4 flex-col">
-              <Button 
-                type="submit" 
+              <Button
+                type="submit"
                 variant="church"
-                className="w-full"
-                disabled={isLoading}
+                className="w-full relative"
+                disabled={loadingState.submit || loadingState.options}
               >
-                {isLoading ? "Cadastrando..." : "Cadastrar"}
+                {loadingState.submit ? (
+                  <>
+                    <span className="opacity-0">Cadastrar</span>
+                    <div className="absolute inset-0 flex items-center justify-center">
+                      <Spinner className="h-5 w-5" />
+                    </div>
+                  </>
+                ) : (
+                  "Cadastrar"
+                )}
               </Button>
               <p className="text-sm text-muted-foreground text-center">
                 Já tem conta?{" "}
@@ -242,6 +423,6 @@ export default function Register() {
           </form>
         </Card>
       </div>
-    </div>
+    </div >
   )
 }
