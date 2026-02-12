@@ -1,21 +1,29 @@
-import { useState } from "react"
-import { Link, useNavigate } from "react-router-dom"
-import { Button } from "@/components/ui/button"
-import { Input } from "@/components/ui/input"
-import { Label } from "@/components/ui/label"
-import { Card, CardContent, CardDescription, CardFooter, CardHeader, CardTitle } from "@/components/ui/card"
-import { Church, Mail, Lock, Eye, EyeOff } from "lucide-react"
-import { useToast } from "@/hooks/use-toast"
-import churchBackground from "@/assets/church-background.jpg"
-import { AuthService } from '@/services/optionsService';
+import { useState } from "react";
+import { Link, useNavigate } from "react-router-dom";
+import { Button } from "@/components/ui/button";
+import { Input } from "@/components/ui/input";
+import { Label } from "@/components/ui/label";
+import {
+  Card,
+  CardContent,
+  CardDescription,
+  CardFooter,
+  CardHeader,
+  CardTitle,
+} from "@/components/ui/card";
+import { Church, Mail, Lock, Eye, EyeOff } from "lucide-react";
+import { useToast } from "@/hooks/use-toast";
+import churchBackground from "@/assets/church-background.jpg";
+import { AuthService } from "@/services/optionsService";
 
 export default function Login() {
-  const [email, setEmail] = useState("")
-  const [password, setPassword] = useState("")
-  const [showPassword, setShowPassword] = useState(false)
-  const [isLoading, setIsLoading] = useState(false)
-  const navigate = useNavigate()
-  const { toast } = useToast()
+  const [email, setEmail] = useState("");
+  const [password, setPassword] = useState("");
+  const [showPassword, setShowPassword] = useState(false);
+  const [isLoading, setIsLoading] = useState(false);
+
+  const navigate = useNavigate();
+  const { toast } = useToast();
 
   const handleLogin = async (e: React.FormEvent) => {
     e.preventDefault();
@@ -23,17 +31,34 @@ export default function Login() {
 
     try {
       const dados = await AuthService.login(email, password);
+
+      // ✅ Guarda token (se existir)
       if (dados?.token) localStorage.setItem("token", dados.token);
+
+      // ✅ Guarda o usuário real (para mostrar no topo/menu)
+      // Se o backend retornar o usuário direto (ex.: { CD_USUARIO, NOME, EMAIL... }),
+      // isso funciona. Se retornar { user: {...} }, também funciona.
+      const userToStore = dados?.user ? dados.user : dados;
+      localStorage.setItem("user", JSON.stringify(userToStore));
+
+      const nome =
+        userToStore?.name ||
+        userToStore?.nome ||
+        userToStore?.NOME ||
+        "usuário";
+
       toast({
         title: "Login realizado!",
-        description: `Bem-vindo, ${dados.user?.name}!`
+        description: `Bem-vindo, ${nome}!`,
       });
 
+      // ✅ rota correta do seu App.tsx
       navigate("/app");
-    } catch (error) {
+    } catch (error: any) {
       toast({
         title: "Erro ao fazer login",
-        description: error.message || "Verifique suas credenciais e tente novamente.",
+        description:
+          error?.message || "Verifique suas credenciais e tente novamente.",
         variant: "destructive",
       });
     } finally {
@@ -46,9 +71,9 @@ export default function Login() {
       className="min-h-screen flex items-center justify-center p-4 relative"
       style={{
         backgroundImage: `url(${churchBackground})`,
-        backgroundSize: 'cover',
-        backgroundPosition: 'center',
-        backgroundRepeat: 'no-repeat'
+        backgroundSize: "cover",
+        backgroundPosition: "center",
+        backgroundRepeat: "no-repeat",
       }}
     >
       {/* Overlay */}
@@ -61,18 +86,25 @@ export default function Login() {
             <Church className="h-12 w-12 text-primary-foreground" />
           </div>
           <div>
-            <h1 className="text-3xl font-bold text-foreground">Sistema de Gestão</h1>
-            <p className="text-muted-foreground">Igrejas e Grupos de Crescimento</p>
+            <h1 className="text-3xl font-bold text-foreground">
+              Sistema de Gestão
+            </h1>
+            <p className="text-muted-foreground">
+              Igrejas e Grupos de Crescimento
+            </p>
           </div>
         </div>
 
         <Card className="shadow-soft border-border/50 backdrop-blur-sm bg-card/80">
           <CardHeader className="space-y-1">
-            <CardTitle className="text-2xl text-center">Entre na sua conta</CardTitle>
+            <CardTitle className="text-2xl text-center">
+              Entre na sua conta
+            </CardTitle>
             <CardDescription className="text-center">
               Digite seu email e senha para acessar o sistema
             </CardDescription>
           </CardHeader>
+
           <form onSubmit={handleLogin}>
             <CardContent className="space-y-4">
               <div className="space-y-2">
@@ -90,6 +122,7 @@ export default function Login() {
                   />
                 </div>
               </div>
+
               <div className="space-y-2">
                 <Label htmlFor="password">Senha</Label>
                 <div className="relative">
@@ -119,6 +152,7 @@ export default function Login() {
                 </div>
               </div>
             </CardContent>
+
             <CardFooter className="space-y-4 flex-col">
               <Button
                 type="submit"
@@ -128,9 +162,13 @@ export default function Login() {
               >
                 {isLoading ? "Entrando..." : "Entrar"}
               </Button>
+
               <p className="text-sm text-muted-foreground text-center">
                 Não tem conta?{" "}
-                <Link to="/cadastro" className="text-primary hover:underline font-medium">
+                <Link
+                  to="/cadastro"
+                  className="text-primary hover:underline font-medium"
+                >
                   Cadastre-se aqui
                 </Link>
               </p>
@@ -139,5 +177,5 @@ export default function Login() {
         </Card>
       </div>
     </div>
-  )
+  );
 }
