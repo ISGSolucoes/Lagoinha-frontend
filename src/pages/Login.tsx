@@ -23,13 +23,13 @@ export default function Login() {
 
     try {
       const dados = await AuthService.login(email, password);
-      localStorage.setItem('token', dados.token);
+      if (dados?.token) localStorage.setItem("token", dados.token);
       toast({
         title: "Login realizado!",
         description: `Bem-vindo, ${dados.user?.name}!`
       });
 
-      navigate("/dashboard");
+      navigate("/app");
     } catch (error) {
       toast({
         title: "Erro ao fazer login",
