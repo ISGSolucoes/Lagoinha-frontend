@@ -1,50 +1,52 @@
 import ApiService from '../lib/api';
 
 export const AuthService = {
-    async login(email: string, password: string) {
-        try {
-            const response = await ApiService.post('/auth/login', { email, password });
+  async login(email: string, password: string) {
+    try {
+      // ✅ backend espera "senha", não "password"
+      const response = await ApiService.post('/auth/login', { email, senha: password });
 
-            console.log('Resposta de login: ', response)
-            return response;
-        } catch (error) {
-            if (error instanceof Error) {
-                if (error.message.includes('Credenciais inválidas')) {
-                    throw new Error('Email ou senha incorretos');
-                }
-                if (error.message.includes('Usuário não encontrado')) {
-                    throw new Error('Email não cadastrado');
-                }
-                if (error.message.includes('Senha incorreta')) {
-                    throw new Error('Senha incorreta');
-                }
-                throw error;
-            }
-            throw new Error('Erro desconhecido ao fazer login');
+      console.log('Resposta de login: ', response);
+      return response;
+    } catch (error) {
+      if (error instanceof Error) {
+        if (error.message.includes('Credenciais inválidas')) {
+          throw new Error('Email ou senha incorretos');
         }
-    },
-
-    async register(formData: object) {
-        const response = await ApiService.post('/auth/cadastro', formData);
-        return response;
-    },
-
-    logout() {
-        localStorage.removeItem('token');
-    },
-
-    async getProfile() {
-        const response = await ApiService.get('/auth/me');
-        return response;
-    },
-
-    async refreshToken() {
-        const response = await ApiService.post('/auth/refresh', {
-            token: localStorage.getItem('refreshToken')
-        });
-        return response;
+        if (error.message.includes('Usuário não encontrado')) {
+          throw new Error('Email não cadastrado');
+        }
+        if (error.message.includes('Senha incorreta')) {
+          throw new Error('Senha incorreta');
+        }
+        throw error;
+      }
+      throw new Error('Erro desconhecido ao fazer login');
     }
+  },
+
+  async register(formData: object) {
+    const response = await ApiService.post('/auth/cadastro', formData);
+    return response;
+  },
+
+  logout() {
+    localStorage.removeItem('token');
+  },
+
+  async getProfile() {
+    const response = await ApiService.get('/auth/me');
+    return response;
+  },
+
+  async refreshToken() {
+    const response = await ApiService.post('/auth/refresh', {
+      token: localStorage.getItem('refreshToken')
+    });
+    return response;
+  }
 };
+
 
 export interface UserType {
     value: number;
