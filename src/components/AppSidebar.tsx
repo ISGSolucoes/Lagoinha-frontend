@@ -40,7 +40,7 @@ const userType = {
 const menuItems = [
   { 
     title: "Dashboard", 
-    url: "/", 
+    url: "/app", // ✅ antes era "/"
     icon: Home,
     showFor: () => true
   },
@@ -49,43 +49,43 @@ const menuItems = [
     items: [
       { 
         title: "Igrejas", 
-        url: "/igrejas", 
+        url: "/app/igrejas", // ✅ antes era "/igrejas"
         icon: Church,
         showFor: () => userType.FL_ADM_GERAL === '1'
       },
       { 
         title: "Grupos de Crescimento", 
-        url: "/grupos", 
+        url: "/app/grupos", // ✅
         icon: Users,
         showFor: () => userType.FL_ADM_GCS === '1'
       },
       { 
         title: "Membros", 
-        url: "/membros", 
+        url: "/app/membros", // ✅
         icon: UserPlus,
         showFor: () => userType.FL_LIDER_GC === '1'
       },
       { 
         title: "Cidades", 
-        url: "/cidades", 
+        url: "/app/cidades", // ✅
         icon: MapPin,
         showFor: () => userType.FL_ADM_GERAL === '1'
       },
       { 
         title: "Estados", 
-        url: "/estados", 
+        url: "/app/estados", // ✅
         icon: Building,
         showFor: () => userType.FL_ADM_GERAL === '1'
       },
       { 
         title: "Tipos de Usuário", 
-        url: "/tipos-usuario", 
+        url: "/app/tipos-usuario", // ✅
         icon: Shield,
         showFor: () => userType.FL_ADM_GERAL === '1'
       },
       { 
         title: "Situações", 
-        url: "/situacoes", 
+        url: "/app/situacoes", // ✅
         icon: Activity,
         showFor: () => userType.FL_ADM_GERAL === '1'
       }
@@ -96,13 +96,13 @@ const menuItems = [
     items: [
       { 
         title: "Lista de Presença", 
-        url: "/lista-presenca", 
+        url: "/app/lista-presenca", // ✅
         icon: ClipboardList,
         showFor: () => userType.FL_LIDER_GC === '1'
       },
       { 
         title: "Relatório de Presença", 
-        url: "/relatorio-presenca", 
+        url: "/app/relatorio-presenca", // ✅
         icon: TrendingUp,
         showFor: () => userType.FL_LIDER_GC === '1'
       }
@@ -113,7 +113,7 @@ const menuItems = [
     items: [
       { 
         title: "Membros por Grupo", 
-        url: "/relatorios/membros-grupo", 
+        url: "/app/relatorios/membros-grupo", // ✅
         icon: BarChart3,
         showFor: () => true
       }
@@ -121,7 +121,7 @@ const menuItems = [
   },
   { 
     title: "Perfil", 
-    url: "/perfil", 
+    url: "/app/perfil", // ✅ antes era "/perfil"
     icon: User,
     showFor: () => true
   }

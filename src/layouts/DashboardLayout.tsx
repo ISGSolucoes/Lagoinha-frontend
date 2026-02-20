@@ -1,7 +1,7 @@
 import { SidebarProvider, SidebarTrigger } from "@/components/ui/sidebar"
 import { AppSidebar } from "@/components/AppSidebar"
 import { Outlet, useNavigate } from "react-router-dom"
-import { Bell, Search, LogOut } from "lucide-react"
+import { Bell, Search, LogOut, User } from "lucide-react"
 import { Button } from "@/components/ui/button"
 import { Input } from "@/components/ui/input"
 
@@ -62,6 +62,10 @@ export default function DashboardLayout() {
     navigate("/login", { replace: true })
   }
 
+  const goToPerfil = () => {
+    navigate("/app/perfil")
+  }
+
   return (
     <SidebarProvider>
       <div className="min-h-screen flex w-full bg-background">
@@ -111,8 +115,21 @@ export default function DashboardLayout() {
                   </DropdownMenuTrigger>
 
                   <DropdownMenuContent align="end" className="w-56">
+                    {/* ✅ O título (não clicável) fica "Minha conta" */}
                     <DropdownMenuLabel>Minha conta</DropdownMenuLabel>
+
                     <DropdownMenuSeparator />
+
+                    {/* ✅ Botão Perfil (clicável) */}
+                    <DropdownMenuItem onClick={goToPerfil} className="cursor-pointer">
+                      <User className="mr-2 h-4 w-4" />
+                      Perfil
+                    </DropdownMenuItem>
+
+                    {/* separador entre os 2 botões */}
+                    <DropdownMenuSeparator />
+
+                    {/* ✅ Botão Sair (clicável) */}
                     <DropdownMenuItem onClick={handleLogout} className="cursor-pointer">
                       <LogOut className="mr-2 h-4 w-4" />
                       Sair
