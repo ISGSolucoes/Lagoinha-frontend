@@ -36,7 +36,7 @@ const App = () => {
             <Route path="/login" element={<Login />} />
             <Route path="/cadastro" element={<Register />} />
 
-            {/* ✅ Redirects (para evitar 404 se o menu estiver sem /app) */}
+            {/* ✅ Redirects (para evitar 404 se algum link/menu estiver sem /app) */}
             <Route path="/dashboard" element={<Navigate to="/app/dashboard" replace />} />
             <Route path="/igrejas" element={<Navigate to="/app/igrejas" replace />} />
             <Route path="/grupos" element={<Navigate to="/app/grupos" replace />} />
@@ -55,7 +55,9 @@ const App = () => {
 
             {/* Protected Routes with Dashboard Layout */}
             <Route path="/app" element={<DashboardLayout />}>
-              <Route index element={<Dashboard />} />
+              {/* 🔥 Melhor prática: /app vai pro dashboard */}
+              <Route index element={<Navigate to="dashboard" replace />} />
+
               <Route path="dashboard" element={<Dashboard />} />
               <Route path="igrejas" element={<Igrejas />} />
               <Route path="grupos" element={<Grupos />} />
