@@ -3,24 +3,35 @@ import ApiService from '../lib/api';
 export const AuthService = {
   async login(email: string, password: string) {
     try {
-      // ✅ backend espera "senha", não "password"
-      const response = await ApiService.post('/auth/login', { email, senha: password });
+      // ✅ backend espera "password"
+      const response = await ApiService.post('/auth/login', { email, password });
 
       console.log('Resposta de login: ', response);
       return response;
     } catch (error) {
       if (error instanceof Error) {
-        if (error.message.includes('Credenciais inválidas')) {
+        if (
+          error.message.includes('Credenciais inválidas') ||
+          error.message.includes('Usuário não encontrado ou senha incorreta')
+        ) {
           throw new Error('Email ou senha incorretos');
         }
+
         if (error.message.includes('Usuário não encontrado')) {
           throw new Error('Email não cadastrado');
         }
+
         if (error.message.includes('Senha incorreta')) {
           throw new Error('Senha incorreta');
         }
+
+        if (error.message.includes('Email e senha são obrigatórios')) {
+          throw new Error('Email e senha são obrigatórios');
+        }
+
         throw error;
       }
+
       throw new Error('Erro desconhecido ao fazer login');
     }
   },

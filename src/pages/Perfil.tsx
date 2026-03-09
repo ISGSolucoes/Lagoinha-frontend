@@ -27,14 +27,12 @@ type PerfilApi = {
   CD_IGREJA_ATUAL?: number;
   CD_IGREJA?: number;
 
-  // se sua API já retornar descrições, ótimo:
   DS_TIPO?: string;
   DS_SITUACAO?: string;
   DS_IGREJA?: string;
   DS_IGREJA_ATUAL?: string;
   DS_CIDADE?: string;
 
-  // (se você tiver UF no perfil, esse campo ajuda muito)
   UF?: string;
 };
 
@@ -56,8 +54,8 @@ type IgrejaApi = {
 
 const API_BASE = import.meta.env.VITE_API_URL ?? "http://localhost:3001";
 
-async function fetchJson(url: string) {
-  const resp = await fetch(url);
+async function fetchJson(url: string, init?: RequestInit) {
+  const resp = await fetch(url, init);
   if (!resp.ok) {
     const txt = await resp.text();
     throw new Error(txt || `Falha ao buscar: ${url}`);
@@ -66,12 +64,10 @@ async function fetchJson(url: string) {
 }
 
 function unwrapDataArray<T>(json: any): T[] {
-  // vem embrulhado: { success: true, data: [...] }
   if (json && typeof json === "object" && "data" in json) {
     const data = (json as ApiWrapped<any>).data;
     return Array.isArray(data) ? (data as T[]) : [];
   }
-  // às vezes vem direto como array
   return Array.isArray(json) ? (json as T[]) : [];
 }
 
@@ -94,15 +90,22 @@ export default function Perfil() {
   const [perfil, setPerfil] = useState<PerfilApi | null>(null);
 
   const [editando, setEditando] = useState(false);
+  const [saving, setSaving] = useState(false);
 
   const [estados, setEstados] = useState<EstadoApi[]>([]);
   const [cidades, setCidades] = useState<CidadeApi[]>([]);
   const [igrejas, setIgrejas] = useState<IgrejaApi[]>([]);
   const [loadingListas, setLoadingListas] = useState(false);
 
-  const [estadoSelecionado, setEstadoSelecionado] = useState<string>("");
-  const [cidadeSelecionada, setCidadeSelecionada] = useState<string>("");
-  const [igrejaAtualSelecionada, setIgrejaAtualSelecionada] = useState<string>("");
+  // valores editáveis
+  const [estadoSelecionado, setEstadoSelecionado] = useState<string>(""); // UF
+  const [cidadeSelecionada, setCidadeSelecionada] = useState<string>(""); // CD_CIDADE string
+  const [igrejaAtualSelecionada, setIgrejaAtualSelecionada] = useState<string>(""); // ID igreja string
+
+  // snapshots (para cancelar edição)
+  const [snapshotUF, setSnapshotUF] = useState<string>("");
+  const [snapshotCidade, setSnapshotCidade] = useState<string>("");
+  const [snapshotIgrejaAtual, setSnapshotIgrejaAtual] = useState<string>("");
 
   // ✅ 1) Carrega perfil
   useEffect(() => {
@@ -123,15 +126,19 @@ export default function Perfil() {
 
         setPerfil(data);
 
-        setCidadeSelecionada(data.CD_CIDADE != null ? String(data.CD_CIDADE) : "");
-        setIgrejaAtualSelecionada(
-          data.CD_IGREJA_ATUAL != null ? String(data.CD_IGREJA_ATUAL) : ""
-        );
+        const uf = (data.UF || "").trim();
+        const cdCidade = data.CD_CIDADE != null ? String(data.CD_CIDADE) : "";
+        const cdIgrejaAtual = data.CD_IGREJA_ATUAL != null ? String(data.CD_IGREJA_ATUAL) : "";
 
-        // se a API já manda UF no perfil, já preenche:
-        if (data.UF && String(data.UF).trim()) {
-          setEstadoSelecionado(String(data.UF).trim());
-        }
+        // set valores atuais
+        setEstadoSelecionado(uf);
+        setCidadeSelecionada(cdCidade);
+        setIgrejaAtualSelecionada(cdIgrejaAtual);
+
+        // snapshots pra "Cancelar"
+        setSnapshotUF(uf);
+        setSnapshotCidade(cdCidade);
+        setSnapshotIgrejaAtual(cdIgrejaAtual);
       } catch (err: any) {
         toast({
           title: "Erro ao carregar perfil",
@@ -146,7 +153,7 @@ export default function Perfil() {
     carregarPerfil();
   }, [emailLogado, toast]);
 
-  // ✅ 2) Carrega estados + igrejas (rotas confirmadas)
+  // ✅ 2) Carrega estados + igrejas
   useEffect(() => {
     async function carregarListasIniciais() {
       try {
@@ -159,10 +166,6 @@ export default function Perfil() {
         const igrejasJson = await fetchJson(`${API_BASE}/api/church`);
         const igrejasArr = Array.isArray(igrejasJson) ? (igrejasJson as IgrejaApi[]) : [];
         setIgrejas(igrejasArr);
-
-        // debug
-        console.log("ESTADOS:", estadosArr);
-        console.log("IGREJAS:", igrejasArr);
       } catch (err: any) {
         toast({
           title: "Erro ao carregar listas",
@@ -177,7 +180,7 @@ export default function Perfil() {
     carregarListasIniciais();
   }, [toast]);
 
-  // ✅ 3) Carrega cidades do UF selecionado (rota confirmada)
+  // ✅ 3) Carrega cidades do UF selecionado
   useEffect(() => {
     async function carregarCidades() {
       if (!estadoSelecionado) {
@@ -194,8 +197,6 @@ export default function Perfil() {
 
         const cidadesArr = unwrapDataArray<CidadeApi>(cidadesJson);
         setCidades(cidadesArr);
-
-        console.log("CIDADES:", cidadesArr);
       } catch (err: any) {
         toast({
           title: "Erro ao carregar cidades",
@@ -211,56 +212,166 @@ export default function Perfil() {
     carregarCidades();
   }, [estadoSelecionado, toast]);
 
+  const nome = perfil?.NOME || userLocal?.NOME || "Usuário";
+  const email = perfil?.EMAIL || emailLogado;
+
+  // Resumo (com nomes quando existirem)
+  const tipoResumo =
+    pickFirst(perfil?.DS_TIPO) || (perfil?.CD_TIPO != null ? String(perfil.CD_TIPO) : "-");
+
+  const situacaoResumo =
+    pickFirst(perfil?.DS_SITUACAO) ||
+    (perfil?.CD_SITUACAO != null ? String(perfil.CD_SITUACAO) : "-");
+
+  const igrejaResumo =
+    igrejas.find((i) => String(i.ID) === String(igrejaAtualSelecionada))?.LABEL ||
+    pickFirst(perfil?.DS_IGREJA_ATUAL, perfil?.DS_IGREJA) ||
+    "-";
+
+  const cidadeNomeSelecionada =
+    cidades.find((c) => String(c.CD_CIDADE) === String(cidadeSelecionada))?.NOME || "";
+
+  const cidadeResumo =
+    cidadeNomeSelecionada ||
+    pickFirst(perfil?.DS_CIDADE) ||
+    (perfil?.CD_CIDADE != null ? String(perfil.CD_CIDADE) : "-");
+
+  const handleEditar = () => {
+    setEditando(true);
+  };
+
+  const handleCancelar = () => {
+    setEditando(false);
+    // volta snapshot
+    setEstadoSelecionado(snapshotUF);
+    setCidadeSelecionada(snapshotCidade);
+    setIgrejaAtualSelecionada(snapshotIgrejaAtual);
+  };
+
+  const handleSalvarPerfil = async () => {
+    try {
+      if (!emailLogado) {
+        toast({
+          title: "Erro",
+          description: "Não encontrei o email do usuário logado.",
+          variant: "destructive",
+        });
+        return;
+      }
+
+      if (!estadoSelecionado) {
+        toast({
+          title: "Validação",
+          description: "Selecione o Estado (UF).",
+          variant: "destructive",
+        });
+        return;
+      }
+
+      if (!cidadeSelecionada) {
+        toast({
+          title: "Validação",
+          description: "Selecione a Cidade.",
+          variant: "destructive",
+        });
+        return;
+      }
+
+      if (!igrejaAtualSelecionada) {
+        toast({
+          title: "Validação",
+          description: "Selecione a Igreja Atual.",
+          variant: "destructive",
+        });
+        return;
+      }
+
+      setSaving(true);
+
+      const body = {
+        email: emailLogado,
+        uf: estadoSelecionado,
+        cd_cidade: Number(cidadeSelecionada),
+        cd_igreja_atual: Number(igrejaAtualSelecionada),
+      };
+
+      const resp = await fetchJson(`${API_BASE}/auth/perfil`, {
+        method: "PUT",
+        headers: { "Content-Type": "application/json" },
+        body: JSON.stringify(body),
+      });
+
+      // Atualiza state local (perfil)
+      setPerfil((prev) => ({
+        ...(prev || {}),
+        UF: estadoSelecionado,
+        CD_CIDADE: Number(cidadeSelecionada),
+        CD_IGREJA_ATUAL: Number(igrejaAtualSelecionada),
+        DS_CIDADE: cidadeNomeSelecionada || prev?.DS_CIDADE,
+        DS_IGREJA_ATUAL:
+          igrejas.find((i) => String(i.ID) === String(igrejaAtualSelecionada))?.LABEL ||
+          prev?.DS_IGREJA_ATUAL,
+      }));
+
+      // atualiza snapshots
+      setSnapshotUF(estadoSelecionado);
+      setSnapshotCidade(cidadeSelecionada);
+      setSnapshotIgrejaAtual(igrejaAtualSelecionada);
+
+      toast({
+        title: "Perfil salvo!",
+        description: resp?.message || "As alterações foram salvas com sucesso.",
+      });
+
+      setEditando(false);
+    } catch (err: any) {
+      toast({
+        title: "Erro ao salvar",
+        description: err?.message || "Não foi possível salvar o perfil.",
+        variant: "destructive",
+      });
+    } finally {
+      setSaving(false);
+    }
+  };
+
   if (loading) return <div className="p-6">Carregando perfil...</div>;
 
   if (!perfil) {
     return (
       <div className="p-6">
         <h1 className="text-2xl font-bold">Meu Perfil</h1>
-        <p className="text-muted-foreground mt-2">
-          Não consegui carregar os dados do perfil.
-        </p>
+        <p className="text-muted-foreground mt-2">Não consegui carregar os dados do perfil.</p>
       </div>
     );
   }
-
-  const nome = perfil?.NOME || userLocal?.NOME || "Usuário";
-  const email = perfil?.EMAIL || emailLogado;
-
-  // resumo (com nomes quando existirem)
-  const tipoResumo =
-    pickFirst(perfil.DS_TIPO) || (perfil.CD_TIPO != null ? String(perfil.CD_TIPO) : "-");
-
-  const situacaoResumo =
-    pickFirst(perfil.DS_SITUACAO) ||
-    (perfil.CD_SITUACAO != null ? String(perfil.CD_SITUACAO) : "-");
-
-  const igrejaResumo =
-    igrejas.find((i) => String(i.ID) === String(igrejaAtualSelecionada))?.LABEL ||
-    pickFirst(perfil.DS_IGREJA_ATUAL, perfil.DS_IGREJA) ||
-    "-";
-
-  const cidadeResumo =
-    cidades.find((c) => String(c.CD_CIDADE) === String(cidadeSelecionada))?.NOME ||
-    pickFirst(perfil.DS_CIDADE) ||
-    (perfil.CD_CIDADE != null ? String(perfil.CD_CIDADE) : "-");
 
   return (
     <div className="space-y-6">
       <div className="flex items-center justify-between">
         <h1 className="text-3xl font-bold">Meu Perfil</h1>
-        <Button variant="church" onClick={() => setEditando((v) => !v)}>
-          {editando ? "Fechar Edição" : "Editar Perfil"}
-        </Button>
+
+        {!editando ? (
+          <Button variant="church" onClick={handleEditar}>
+            Editar Perfil
+          </Button>
+        ) : (
+          <div className="flex gap-2">
+            <Button variant="church" onClick={handleSalvarPerfil} disabled={saving}>
+              {saving ? "Salvando..." : "Salvar Perfil"}
+            </Button>
+            <Button variant="outline" onClick={handleCancelar} disabled={saving}>
+              Cancelar
+            </Button>
+          </div>
+        )}
       </div>
 
       <div className="grid grid-cols-1 lg:grid-cols-3 gap-6">
         {/* Resumo */}
         <div className="border rounded-xl p-6 bg-card">
           <div className="w-16 h-16 rounded-full bg-muted flex items-center justify-center mb-4">
-            <span className="font-semibold">
-              {(nome?.trim()?.[0] || "U").toUpperCase()}
-            </span>
+            <span className="font-semibold">{(nome?.trim()?.[0] || "U").toUpperCase()}</span>
           </div>
 
           <div className="text-xl font-semibold">{nome}</div>
@@ -303,7 +414,7 @@ export default function Perfil() {
               <Select
                 value={estadoSelecionado}
                 onValueChange={(v) => {
-                  setEstadoSelecionado(v);
+                  setEstadoSelecionado(v); // UF
                   setCidadeSelecionada("");
                 }}
                 disabled={!editando || loadingListas || estados.length === 0}
@@ -346,7 +457,7 @@ export default function Perfil() {
                         ? "Carregando cidades..."
                         : cidades.length === 0
                         ? "Sem cidades"
-                        : cidadeResumo || "Selecione a cidade"
+                        : "Selecione a cidade"
                     }
                   />
                 </SelectTrigger>
@@ -375,7 +486,7 @@ export default function Perfil() {
                         ? "Carregando igrejas..."
                         : igrejas.length === 0
                         ? "Sem igrejas"
-                        : igrejaResumo || "Selecione a igreja"
+                        : "Selecione a igreja"
                     }
                   />
                 </SelectTrigger>
@@ -388,6 +499,14 @@ export default function Perfil() {
                 </SelectContent>
               </Select>
             </div>
+
+            {/* Texto de apoio só para mostrar "nome da cidade" na tela mesmo fora do select */}
+            {!editando && (
+              <div className="md:col-span-2 text-sm text-muted-foreground">
+                Cidade atual: <span className="font-medium text-foreground">{cidadeResumo}</span>{" "}
+                {estadoSelecionado ? `- ${estadoSelecionado}` : ""}
+              </div>
+            )}
           </div>
         </div>
       </div>
