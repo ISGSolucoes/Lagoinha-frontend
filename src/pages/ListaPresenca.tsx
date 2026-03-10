@@ -56,25 +56,42 @@ export default function ListaPresenca() {
 
       setLoading(true);
       try {
-        // Busca a lista base de membros do GC
+        // Passo A: Busca a lista base de membros cadastrados no GC
         const resMembros = await axios.get(`${API_URL}/attendance/members/1/${selectedGrupo}`);
-        setMembrosAtivos(resMembros.data);
+        const listaMembros: Membro[] = resMembros.data;
+        setMembrosAtivos(listaMembros);
 
-        // Busca se já existe gravação para esta data
+        // Passo B: Busca se já existe gravação de frequência para esta data
         const dataFormatada = format(selectedDate, "yyyy-MM-dd");
         const resHistorico = await axios.get(`${API_URL}/attendance/history`, {
           params: { cdIgreja: 1, cdGc: selectedGrupo, data: dataFormatada }
         });
 
-        // Mapeia o que veio do banco para o estado do React
+        console.log('Historico', resHistorico.data)
+
+        const historicoNoBanco = resHistorico.data;
         const novoEstadoPresenca: Record<number, boolean> = {};
-        resHistorico.data.forEach((item: any) => {
-          novoEstadoPresenca[item.CD_MEMBRO] = item.FL_PRESENCA === 'S';
-        });
+
+        if (historicoNoBanco && historicoNoBanco.length > 0) {
+          historicoNoBanco.forEach((item: any) => {
+            const isPresente = item.FL_PRESENCA?.trim() === 'S';
+            novoEstadoPresenca[item.CD_MEMBRO] = isPresente;
+          });
+        } else {
+          // Caso não exista registro no banco, inicializamos todos como AUSENTES (false)
+          // O usuário então marcará quem compareceu
+          listaMembros.forEach((m) => {
+            novoEstadoPresenca[m.ID] = false;
+          });
+        }
 
         setPresencas(novoEstadoPresenca);
       } catch (error) {
-        toast({ title: "Erro", description: "Falha ao sincronizar dados", variant: "destructive" });
+        toast({
+          title: "Erro",
+          description: "Falha ao sincronizar dados com o servidor",
+          variant: "destructive"
+        });
       } finally {
         setLoading(false);
       }
@@ -91,13 +108,13 @@ export default function ListaPresenca() {
 
   const marcarTodosPresentes = () => {
     const novas: Record<number, boolean> = {}
-    membrosAtivos.forEach(m => novas[m.ID] = true)
+    membrosAtivos.forEach(m => { novas[m.ID] = true });
     setPresencas(novas)
   }
 
   const marcarTodosAusentes = () => {
     const novas: Record<number, boolean> = {}
-    membrosAtivos.forEach(m => novas[m.ID] = false)
+    membrosAtivos.forEach(m => { novas[m.ID] = false });
     setPresencas(novas)
   }
 
@@ -117,11 +134,12 @@ export default function ListaPresenca() {
 
       toast({
         title: "Presenças salvas!",
-        description: `Lista atualizada com sucesso.`,
+        description: `Lista de presença atualizada para o dia ${format(selectedDate, "dd/MM/yyyy")}.`,
       })
     } catch (error) {
       toast({
         title: "Erro ao salvar",
+        description: "Não foi possível gravar os dados no banco Firebird.",
         variant: "destructive"
       })
     }
@@ -168,12 +186,17 @@ export default function ListaPresenca() {
                   {format(selectedDate, "dd/MM/yyyy", { locale: ptBR })}
                 </Button>
               </PopoverTrigger>
-              <PopoverContent className="w-auto p-0">
+              <PopoverContent className="w-auto p-0" align="start">
+                <div className="sr-only">
+                  <h2>Selecione uma data</h2>
+                  <p>Calendário para escolha da data do evento</p>
+                </div>
                 <Calendar
                   mode="single"
                   selected={selectedDate}
                   onSelect={(d) => d && setSelectedDate(d)}
                   locale={ptBR}
+                  initialFocus
                 />
               </PopoverContent>
             </Popover>
@@ -191,13 +214,13 @@ export default function ListaPresenca() {
           </div>
 
           <div className="flex flex-wrap gap-2">
-            <Button variant="outline" onClick={marcarTodosPresentes} className="bg-green-50 text-green-700 border-green-200">
+            <Button variant="outline" onClick={marcarTodosPresentes} className="bg-green-50 text-green-700 border-green-200 hover:bg-green-100">
               <Check className="h-4 w-4 mr-2" /> Marcar Todos Presentes
             </Button>
-            <Button variant="outline" onClick={marcarTodosAusentes} className="bg-red-50 text-red-700 border-red-200">
+            <Button variant="outline" onClick={marcarTodosAusentes} className="bg-red-50 text-red-700 border-red-200 hover:bg-red-100">
               <X className="h-4 w-4 mr-2" /> Marcar Todos Ausentes
             </Button>
-            <Button onClick={salvarPresencas} className="bg-primary text-white">
+            <Button onClick={salvarPresencas} className="bg-primary text-white hover:opacity-90">
               <Save className="h-4 w-4 mr-2" /> Salvar Presenças
             </Button>
           </div>
@@ -205,10 +228,14 @@ export default function ListaPresenca() {
           <Card className="shadow-soft border-border/50">
             <CardHeader>
               <CardTitle>Membros do Grupo</CardTitle>
+              <CardDescription>Clique no card do membro para alternar entre presente e ausente</CardDescription>
             </CardHeader>
             <CardContent>
               {loading ? (
-                <div className="flex justify-center p-8"><Loader2 className="animate-spin h-8 w-8 text-primary" /></div>
+                <div className="flex flex-col items-center justify-center p-12 space-y-4">
+                  <Loader2 className="animate-spin h-10 w-10 text-primary" />
+                  <p className="text-muted-foreground">Sincronizando com o banco Firebird...</p>
+                </div>
               ) : (
                 <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-4">
                   {membrosAtivos.map((membro) => {
@@ -218,17 +245,26 @@ export default function ListaPresenca() {
                         key={membro.ID}
                         onClick={() => togglePresenca(membro.ID)}
                         className={cn(
-                          "p-4 rounded-lg border-2 cursor-pointer transition-all hover:shadow-md",
-                          presente ? "border-green-200 bg-green-50 text-green-700" : "border-red-200 bg-red-50 text-red-700"
+                          "p-4 rounded-lg border-2 cursor-pointer transition-all duration-200 hover:shadow-md select-none",
+                          presente
+                            ? "border-green-200 bg-green-50/50 text-green-700"
+                            : "border-red-100 bg-red-50/30 text-red-700 opacity-80"
                         )}
                       >
                         <div className="flex justify-between items-center">
                           <div>
-                            <h3 className="font-medium">{membro.NOME}</h3>
-                            <p className="text-xs opacity-70">{membro.SITUACAO}</p>
+                            <h3 className="font-bold">{membro.NOME}</h3>
+                            <p className="text-xs font-medium uppercase tracking-wider opacity-60">{membro.SITUACAO}</p>
                           </div>
-                          <Badge className={presente ? "bg-green-100 text-green-800" : "bg-red-100 text-red-800"}>
-                            {presente ? "Presente" : "Ausente"}
+                          <Badge className={cn(
+                            "shadow-none",
+                            presente ? "bg-green-100 text-green-800 hover:bg-green-100" : "bg-red-100 text-red-800 hover:bg-red-100"
+                          )}>
+                            {presente ? (
+                              <><Check className="h-3 w-3 mr-1" /> Presente</>
+                            ) : (
+                              <><X className="h-3 w-3 mr-1" /> Ausente</>
+                            )}
                           </Badge>
                         </div>
                       </div>
@@ -244,15 +280,14 @@ export default function ListaPresenca() {
   )
 }
 
-// Componente auxiliar para os cards de estatística
 function StatCard({ icon, label, value, color = "" }: any) {
   return (
     <Card className="shadow-soft border-border/50">
       <CardContent className="p-6 flex items-center space-x-4">
-        <div className="p-2 bg-secondary rounded-full">{icon}</div>
+        <div className="p-3 bg-secondary/50 rounded-xl">{icon}</div>
         <div>
           <p className={cn("text-2xl font-bold", color)}>{value}</p>
-          <p className="text-muted-foreground text-sm">{label}</p>
+          <p className="text-muted-foreground text-xs uppercase tracking-tighter font-semibold">{label}</p>
         </div>
       </CardContent>
     </Card>
