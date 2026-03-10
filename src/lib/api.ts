@@ -2,15 +2,16 @@ import { useToast } from "@/hooks/use-toast";
 
 const API_BASE_URL = 'http://localhost:3001';
 
+
 class ApiService {
     private static async handleResponse(response: Response) {
         const contentType = response.headers.get('content-type');
-        
+
         // Verificar se a resposta está vazia (sem conteúdo)
         if (response.status === 204 || response.headers.get('content-length') === '0') {
             return null;
         }
-        
+
         let data;
 
         if (contentType?.includes('application/json')) {
@@ -21,7 +22,7 @@ class ApiService {
             data = await response.blob();
         }
 
-        if (!response.ok) {        
+        if (!response.ok) {
             if (data && typeof data === 'object') {
                 throw new Error(data.detalhes || data.erro || data.message || 'Erro na requisição');
             }
@@ -29,7 +30,7 @@ class ApiService {
         }
 
         return data;
-    }    
+    }
 
     static async get(endpoint: string, requiresAuth = false) {
         const headers: Record<string, string> = {
