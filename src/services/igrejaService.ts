@@ -16,6 +16,7 @@ export interface IgrejaDTO {
 export interface IgrejaBackend {
   ID: number;
   LABEL: string; // FANTASIA
+  FANTASIA?: string;
   CD_CIDADE: number;
   LOCALIZACAO: string; // "Cidade-UF"
   CIDADE: string;
@@ -51,12 +52,12 @@ class IgrejaService {
   async getIgrejas() {
     try {
       const response = await ApiService.get('/api/church');
-      
+
       console.log('retorno api response: ', response);
-      
+
       // O response já é o array de dados, não precisa de .data
       const backendData: IgrejaBackend[] = response;
-      
+
       if (!Array.isArray(backendData)) {
         console.error('Dados retornados não são um array:', backendData);
         return [];
@@ -67,14 +68,14 @@ class IgrejaService {
         // Usar CIDADE e ESTADO separados se disponíveis, senão usar LOCALIZACAO
         let cidade = item.CIDADE || '';
         let estado = item.ESTADO || '';
-        
+
         if (!cidade && item.LOCALIZACAO) {
           [cidade, estado] = item.LOCALIZACAO.split('-');
         }
-        
+
         // Limpar espaços no estado
         estado = estado.trim();
-        
+
         return {
           id: item.ID,
           nomeFantasia: item.LABEL,
@@ -105,19 +106,19 @@ class IgrejaService {
       const response = await ApiService.get(`/api/church/${id}`);
       const item: IgrejaBackend = response;
 
-      console.log('Retorno api response: ',response)
-      console.log('Retorno api item: ',item)
- 
+      console.log('Retorno api response: ', response)
+      console.log('Retorno api item: ', item)
+
       // Transformar para o formato do frontend
       let cidade = item.CIDADE || '';
       let estado = item.ESTADO || '';
-      
+
       if (!cidade && item.LOCALIZACAO) {
         [cidade, estado] = item.LOCALIZACAO.split('-');
       }
-      
+
       estado = estado.trim();
-      
+
       return {
         id: item.ID,
         nomeFantasia: item.FANTASIA,
@@ -156,7 +157,7 @@ class IgrejaService {
       console.log('Enviando dados para criação:', payload);
       const response = await ApiService.post('/api/church', payload);
       console.log('Resposta da criação:', response);
-      
+
       return response;
     } catch (error) {
       console.error('Erro ao criar igreja:', error);
@@ -181,9 +182,9 @@ class IgrejaService {
       console.log('Enviando dados para atualização:', payload);
 
       const response = await ApiService.put(`/api/church/${id}`, payload);
-      
+
       console.log('Resposta da atualização:', response);
-      
+
       return response;
     } catch (error) {
       console.error('Erro ao atualizar igreja:', error);
@@ -196,7 +197,7 @@ class IgrejaService {
       console.log('Deletando igreja com ID:', id);
       const response = await ApiService.delete(`/api/church/${id}`);
       console.log('Resposta da exclusão:', response);
-      
+
       return response;
     } catch (error) {
       console.error('Erro ao deletar igreja:', error);

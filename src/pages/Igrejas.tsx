@@ -182,34 +182,31 @@ export default function Igrejas() {
   const handleEdit = async (igreja: Igreja) => {
     try {
       // Buscar detalhes completos da igreja
-      const response = await igrejaService.getIgrejaById(igreja.id)
-      const igrejaDetalhes = response.data
+      const igrejaDetalhes = await igrejaService.getIgrejaById(igreja.id)
 
-      console.log('Retorno api 2 response: ', response)
-
+      console.log('Retorno api 2 response: ', igrejaDetalhes)
       console.log('Retorno api 2 igreja: ', igreja)
 
       setIsEditMode(true)
       setCurrentId(igreja.id)
 
       // Se a igreja tiver estado, buscar cidades
-      if (igreja.estado) {
-        setSelectedEstado(igreja.estado)
-        await handleEstadoChange(igreja.estado)
+      const estadoAtual = igrejaDetalhes.estado || igreja.estado;
+      if (estadoAtual) {
+        setSelectedEstado(estadoAtual)
+        await handleEstadoChange(estadoAtual)
       }
 
-     
       setFormData({
-        FANTASIA: response.FANTASIA || igreja.nomeFantasia,
-        RAZAO_SOCIAL: response.RAZAO_SOCIAL || igreja.razaoSocial,
-        CNPJ: response.CNPJ || igreja.cnpj,
-        ENDERECO: response.ENDERECO || igreja.endereco,
-        CEP: response.CEP || igreja.cep,
-        CD_CIDADE: response.CD_CIDADE || igreja.cd_cidade,
-        fone: response.fone || igreja.telefone,
-        email: response.email || igreja.email,
-        CD_SITUACAO: response.CD_SITUACAO || 1,
-        ESTADO: response.estado || igreja.estado
+        FANTASIA: igrejaDetalhes.nomeFantasia || igreja.nomeFantasia,
+        RAZAO_SOCIAL: igrejaDetalhes.razaoSocial || igreja.razaoSocial,
+        CNPJ: igrejaDetalhes.cnpj || igreja.cnpj,
+        ENDERECO: igrejaDetalhes.endereco || igreja.endereco,
+        CEP: igrejaDetalhes.cep || igreja.cep,
+        CD_CIDADE: igrejaDetalhes.cd_cidade || igreja.cd_cidade,
+        fone: igrejaDetalhes.telefone || igreja.telefone,
+        email: igrejaDetalhes.email || igreja.email,
+        CD_SITUACAO: igrejaDetalhes.cd_situacao || 1
       })
 
       setIsDialogOpen(true)
