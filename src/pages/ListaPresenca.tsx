@@ -13,7 +13,7 @@ import { cn } from "@/lib/utils"
 import { useToast } from "@/hooks/use-toast"
 import axios from "axios"
 
-const API_URL = "http://localhost:3001/api"
+const API_URL = import.meta.env.VITE_API_BASE_URL;
 
 // Interfaces para tipagem
 interface Membro {
@@ -40,7 +40,7 @@ export default function ListaPresenca() {
   useEffect(() => {
     async function fetchGrupos() {
       try {
-        const response = await axios.get(`${API_URL}/growthGroup`);
+        const response = await axios.get(`${API_URL}/api/growthGroup`);
         setGrupos(response.data);
       } catch (error) {
         console.error("Erro ao carregar grupos", error);
@@ -57,13 +57,13 @@ export default function ListaPresenca() {
       setLoading(true);
       try {
         // Passo A: Busca a lista base de membros cadastrados no GC
-        const resMembros = await axios.get(`${API_URL}/attendance/members/1/${selectedGrupo}`);
+        const resMembros = await axios.get(`${API_URL}/api/attendance/members/1/${selectedGrupo}`);
         const listaMembros: Membro[] = resMembros.data;
         setMembrosAtivos(listaMembros);
 
         // Passo B: Busca se já existe gravação de frequência para esta data
         const dataFormatada = format(selectedDate, "yyyy-MM-dd");
-        const resHistorico = await axios.get(`${API_URL}/attendance/history`, {
+        const resHistorico = await axios.get(`${API_URL}/api/attendance/history`, {
           params: { cdIgreja: 1, cdGc: selectedGrupo, data: dataFormatada }
         });
 
@@ -130,7 +130,7 @@ export default function ListaPresenca() {
         }))
       };
 
-      await axios.post(`${API_URL}/attendance`, payload);
+      await axios.post(`${API_URL}/api/attendance`, payload);
 
       toast({
         title: "Presenças salvas!",

@@ -52,7 +52,7 @@ type IgrejaApi = {
   SITUACAO?: string;
 };
 
-const API_BASE = import.meta.env.VITE_API_URL ?? "http://localhost:3001";
+const API_BASE = import.meta.env.VITE_API_BASE_URL;
 
 async function fetchJson(url: string, init?: RequestInit) {
   const resp = await fetch(url, init);
@@ -425,8 +425,8 @@ export default function Perfil() {
                       loadingListas
                         ? "Carregando..."
                         : estados.length === 0
-                        ? "Sem estados"
-                        : "Selecione o estado"
+                          ? "Sem estados"
+                          : "Selecione o estado"
                     }
                   />
                 </SelectTrigger>
@@ -454,10 +454,10 @@ export default function Perfil() {
                       !estadoSelecionado
                         ? "Selecione primeiro o estado"
                         : loadingListas
-                        ? "Carregando cidades..."
-                        : cidades.length === 0
-                        ? "Sem cidades"
-                        : "Selecione a cidade"
+                          ? "Carregando cidades..."
+                          : cidades.length === 0
+                            ? "Sem cidades"
+                            : "Selecione a cidade"
                     }
                   />
                 </SelectTrigger>
@@ -485,8 +485,8 @@ export default function Perfil() {
                       loadingListas
                         ? "Carregando igrejas..."
                         : igrejas.length === 0
-                        ? "Sem igrejas"
-                        : "Selecione a igreja"
+                          ? "Sem igrejas"
+                          : "Selecione a igreja"
                     }
                   />
                 </SelectTrigger>

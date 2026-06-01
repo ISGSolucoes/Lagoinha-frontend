@@ -60,54 +60,54 @@ export const AuthService = {
 
 
 export interface UserType {
-    value: number;
-    label: string;
+  value: number;
+  label: string;
 }
 
 export interface Church {
-    value: number;
-    label: string;
+  value: number;
+  label: string;
 }
 
 export const UserTypeService = {
-    async getUserTypes() {
-        try {
-            const response = await ApiService.get('/api/userType');
-            return response;
-        } catch (error) {
-            console.error('Erro no getUserTypes:', error);
-            throw new Error(`Falha ao carregar tipos de usuário: ${error.message}`);
-        }
+  async getUserTypes() {
+    try {
+      const response = await ApiService.get('/api/userType');
+      return response;
+    } catch (error) {
+      console.error('Erro no getUserTypes:', error);
+      throw new Error(`Falha ao carregar tipos de usuário: ${error.message}`);
     }
+  }
 }
 
 export const ChurchService = {
-    async getChurches() {
-        try {
-            const response = await ApiService.get('/api/church');
-            return response; //await response.json() as Church[];
-        } catch (error) {
-            console.error('Erro no getChurch:', error);
-            throw new Error(`Falha ao carregar igrejas: ${error.message}`);
-        }
+  async getChurches() {
+    try {
+      const response = await ApiService.get('/api/church');
+      return response; //await response.json() as Church[];
+    } catch (error) {
+      console.error('Erro no getChurch:', error);
+      throw new Error(`Falha ao carregar igrejas: ${error.message}`);
     }
-        
+  }
+
 }
 
 export const SituationService = {
-    getSituations: () => {
-        return ApiService.get('/api/situation');
-    }
+  getSituations: () => {
+    return ApiService.get('/api/situation');
+  }
 }
 
 export const locationsEstadosService = {
-    getlocationsEstados: () => {
-        return ApiService.get('/api/locations/estados');
-    }
+  getlocationsEstados: () => {
+    return ApiService.get('/api/locations/estados');
+  }
 }
 
 export const locationsCidadesService = {
-    getlocationsCidades: (estado) => {
-        return ApiService.get(`/api/locations/cidades/${estado}`);
-    }
+  getlocationsCidades: (estado) => {
+    return ApiService.get(`/api/locations/cidades/${estado}`);
+  }
 }

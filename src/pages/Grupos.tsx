@@ -12,7 +12,7 @@ import { Users, Plus, Search, Edit, Trash2, Calendar, User, Church, MapPin } fro
 import { useToast } from "@/hooks/use-toast"
 import { SituationService } from "../services/optionsService"
 
-const API_URL = "http://localhost:3001/api"
+const API_URL = import.meta.env.VITE_API_BASE_URL;
 
 interface Situacao {
   CD_SITUACAO: number
@@ -118,7 +118,7 @@ export default function Grupos() {
   const resetForm = () => setFormData(initialFormData)
 
   const fetchIgrejas = async () => {
-    const response = await fetch(`${API_URL}/church`)
+    const response = await fetch(`${API_URL}/api/church`)
     if (!response.ok) throw new Error("Não foi possível carregar as igrejas")
     const data = await response.json()
     setIgrejas(Array.isArray(data) ? data : [])
@@ -131,7 +131,7 @@ export default function Grupos() {
   }
 
   const fetchGrupos = async () => {
-    const response = await fetch(`${API_URL}/growthGroup`)
+    const response = await fetch(`${API_URL}/api/growthGroup`)
     if (!response.ok) throw new Error("Não foi possível carregar os grupos")
     const data = await response.json()
     setGrupos(Array.isArray(data) ? data : [])
@@ -199,7 +199,7 @@ export default function Grupos() {
     try {
       setLoading(true)
 
-      const response = await fetch(`${API_URL}/growthGroup/${id}`)
+      const response = await fetch(`${API_URL}/api/growthGroup/${id}`)
       if (!response.ok) throw new Error("Não foi possível buscar o grupo por id")
 
       const grupo: GrowthGroupApi = await response.json()
@@ -240,7 +240,7 @@ export default function Grupos() {
     try {
       setLoading(true)
 
-      const response = await fetch(`${API_URL}/growthGroup/${id}`, { method: "DELETE" })
+      const response = await fetch(`${API_URL}/api/growthGroup/${id}`, { method: "DELETE" })
       const json = await response.json()
 
       if (!response.ok || json?.success === false) {
@@ -307,7 +307,7 @@ export default function Grupos() {
       }
 
       const isEditing = !!formData.cd_gc
-      const url = isEditing ? `${API_URL}/growthGroup/${formData.cd_gc}` : `${API_URL}/growthGroup`
+      const url = isEditing ? `${API_URL}/api/growthGroup/${formData.cd_gc}` : `${API_URL}/api/growthGroup`
       const method = isEditing ? "PUT" : "POST"
 
       const response = await fetch(url, {
